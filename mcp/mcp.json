@@ -4,6 +4,64 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "google-analytics": {
+      "type": "stdio",
+      "command": "pipx",
+      "args": ["run", "analytics-mcp"],
+      "env": {
+        "GA4_PROPERTY_ID": "${GA4_PROPERTY_ID}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+      }
+    },
+    "google-ads": {
+      "type": "stdio",
+      "command": "pipx",
+      "args": ["run", "google-ads-mcp"],
+      "env": {
+        "GOOGLE_ADS_CLIENT_ID": "${GOOGLE_ADS_CLIENT_ID}",
+        "GOOGLE_ADS_CLIENT_SECRET": "${GOOGLE_ADS_CLIENT_SECRET}",
+        "GOOGLE_ADS_REFRESH_TOKEN": "${GOOGLE_ADS_REFRESH_TOKEN}",
+        "GOOGLE_ADS_DEVELOPER_TOKEN": "${GOOGLE_ADS_DEVELOPER_TOKEN}",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID": "${GOOGLE_ADS_LOGIN_CUSTOMER_ID}"
+      }
+    },
+    "meta-ads": {
+      "type": "stdio",
+      "command": "pipx",
+      "args": ["run", "meta-ads-mcp"],
+      "env": {
+        "META_ACCESS_TOKEN": "${META_ACCESS_TOKEN}",
+        "META_ACCOUNT_ID": "${META_ACCOUNT_ID}"
+      }
+    },
+    "bigquery": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@ergut/mcp-bigquery-server"],
+      "env": {
+        "BIGQUERY_PROJECT_ID": "${BIGQUERY_PROJECT_ID}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+      }
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${POSTGRES_CONNECTION_STRING}"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
+      }
+    },
+    "dv360": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-dv360"],
+      "env": {
+        "DV360_CLIENT_ID": "${DV360_CLIENT_ID}",
+        "DV360_CLIENT_SECRET": "${DV360_CLIENT_SECRET}",
+        "DV360_REFRESH_TOKEN": "${DV360_REFRESH_TOKEN}",
+        "DV360_ADVERTISER_ID": "${DV360_ADVERTISER_ID}"
+      }
     }
   }
 }
