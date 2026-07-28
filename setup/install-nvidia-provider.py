@@ -71,6 +71,24 @@ NVIDIA_MODELS = [
         "max_prompt": 131072,
         "max_output": 32768,
     },
+    {
+        "model_id": "moonshotai/kimi-k2.6",
+        "display_name": "Kimi K2.6",
+        "max_prompt": 262144,
+        "max_output": 32768,
+    },
+    {
+        "model_id": "z-ai/glm-5.2",
+        "display_name": "GLM-5.2",
+        "max_prompt": 1000000,
+        "max_output": 32768,
+    },
+    {
+        "model_id": "qwen/qwen3-coder-480b-a35b-instruct",
+        "display_name": "Qwen3-Coder 480B",
+        "max_prompt": 262144,
+        "max_output": 32768,
+    },
 ]
 
 
