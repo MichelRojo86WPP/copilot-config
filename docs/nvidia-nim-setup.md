@@ -52,6 +52,9 @@ Los registrados actualmente en Copilot:
 - Llama 3.3 70B — proposito general
 - Mistral Large 2 — proposito general
 - Qwen 3.5 122B — multilingue
+- Kimi K2.6 — agentic + coding largo, multimodal (1T MoE)
+- GLM-5.2 — coding/agentic con contexto 1M (753B MoE)
+- Qwen3-Coder 480B — especialista en codigo nivel Claude Sonnet
 
 ## Limitaciones del free tier
 

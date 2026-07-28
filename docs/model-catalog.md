@@ -16,6 +16,9 @@ Todos son **gratuitos** (~40 RPM, sin creditos, sin tarjeta).
 | `meta/llama-3.3-70b-instruct` | Llama 3.3 70B | 131K | Proposito general |
 | `mistralai/mistral-large-2-instruct` | Mistral Large 2 | 131K | Proposito general |
 | `qwen/qwen3.5-122b-a10b` | Qwen 3.5 122B | 131K | Multilingue |
+| `moonshotai/kimi-k2.6` | Kimi K2.6 | 262K | **Agentic + codigo** multimodal (1T MoE) |
+| `z-ai/glm-5.2` | GLM-5.2 | **1M** | Coding/agentic SOTA, contexto 1M (753B MoE) |
+| `qwen/qwen3-coder-480b-a35b-instruct` | Qwen3-Coder 480B | 262K | **Codigo** especialista nivel Claude Sonnet |
 
 ## LLMs de proposito general
 
@@ -35,7 +38,8 @@ Todos son **gratuitos** (~40 RPM, sin creditos, sin tarjeta).
 | `deepseek-ai/deepseek-v4-flash` | 1M | DeepSeek rapido |
 | `deepseek-ai/deepseek-v4-pro` | 1M | DeepSeek completo |
 | `openai/gpt-oss-120b` | 131K | GPT open source |
-| `moonshotai/kimi-k2.6` | 131K | Moonshot Kimi |
+| `moonshotai/kimi-k2.6` | 262K | Moonshot Kimi (agentic + codigo) |
+| `z-ai/glm-5.2` | 1M | GLM-5.2 coding/agentic (753B MoE) |
 | `minimaxai/minimax-m3` | 1M | MiniMax M3 |
 | `stepfun-ai/step-3.7-flash` | 131K | StepFun rapido |
 | `bytedance/seed-oss-36b-instruct` | 131K | ByteDance |
@@ -45,6 +49,7 @@ Todos son **gratuitos** (~40 RPM, sin creditos, sin tarjeta).
 | Modelo | Contexto | Notas |
 |--------|----------|-------|
 | `mistralai/codestral-22b-instruct-v0.1` | 262K | **Top para codigo** |
+| `qwen/qwen3-coder-480b-a35b-instruct` | 262K | **Especialista en codigo** nivel Claude Sonnet (Apache 2.0) |
 | `bigcode/starcoder2-15b` | 16K | StarCoder 2 |
 | `meta/codellama-70b` | 100K | CodeLlama |
 | `google/codegemma-7b` | 8K | CodeGemma |

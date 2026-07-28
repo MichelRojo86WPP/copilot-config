@@ -84,6 +84,9 @@ Los siguientes modelos estan disponibles directamente en el selector de modelos 
 | Mistral Large 2 | `mistralai/mistral-large-2-instruct` | 131K |
 | Codestral 22B | `mistralai/codestral-22b-instruct-v0.1` | 262K |
 | Qwen 3.5 122B | `qwen/qwen3.5-122b-a10b` | 131K |
+| Kimi K2.6 | `moonshotai/kimi-k2.6` | 262K |
+| GLM-5.2 | `z-ai/glm-5.2` | 1M |
+| Qwen3-Coder 480B | `qwen/qwen3-coder-480b-a35b-instruct` | 262K |
 
 > Todos gratuitos via NVIDIA NIM (~40 RPM, sin limite de creditos).
 > Obtener API key gratuita: [build.nvidia.com](https://build.nvidia.com)
