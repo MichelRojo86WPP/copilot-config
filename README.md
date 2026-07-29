@@ -14,16 +14,20 @@ copilot-config/
 │   ├── runbook-generator/      # Generador de runbooks operacionales
 │   ├── release-manager/        # Gestion de releases y changelogs
 │   └── accelerated-computing-cudf/  # NVIDIA cuDF - GPU DataFrames (oficial NVIDIA)
+├── plugins/
+│   └── plugins.json            # Inventario de plugins de los marketplaces de Copilot
 ├── mcp/
 │   └── mcp.json                # Configuracion MCP global (context7)
 ├── scripts/
 │   └── nvidia_gen.py           # Generador de imagenes/video con IA (multi-proveedor)
 ├── setup/
 │   ├── install.ps1             # Instalador automatico (Windows PowerShell)
+│   ├── install-plugins.ps1     # Restaura los plugins de plugins.json
 │   └── install-nvidia-provider.py  # Instala NVIDIA NIM en Copilot DB
 └── docs/
     ├── nvidia-nim-setup.md     # Guia NVIDIA NIM
     ├── skills-guide.md         # Guia de uso de skills
+    ├── plugins-guide.md        # Guia de plugins, agentes y MCP servers
     └── model-catalog.md        # Catalogo de modelos NVIDIA
 ```
 
@@ -38,6 +42,9 @@ cd copilot-config
 
 # Ejecutar instalador (incluye tu NVIDIA API key)
 .\setup\install.ps1 -NvidiaApiKey "nvapi-TU_KEY_AQUI"
+
+# Restaurar los plugins de los marketplaces de Copilot
+.\setup\install-plugins.ps1
 ```
 
 ### Opcion 2: Manual
@@ -53,7 +60,10 @@ Copy-Item mcp\mcp.json "$env:USERPROFILE\.copilot\mcp.json"
 # 3. Instalar proveedor NVIDIA NIM
 python setup\install-nvidia-provider.py --api-key "nvapi-TU_KEY"
 
-# 4. Reiniciar Copilot
+# 4. Registrar los plugins de los marketplaces
+.\setup\install-plugins.ps1
+
+# 5. Reiniciar Copilot
 ```
 
 ## Skills disponibles
@@ -91,11 +101,40 @@ Los siguientes modelos estan disponibles directamente en el selector de modelos 
 > Todos gratuitos via NVIDIA NIM (~40 RPM, sin limite de creditos).
 > Obtener API key gratuita: [build.nvidia.com](https://build.nvidia.com)
 
+## Plugins instalados
+
+Plugins de los marketplaces `copilot-plugins` y `awesome-copilot`, declarados en
+[`plugins/plugins.json`](plugins/plugins.json).
+
+| Plugin | Marketplace | Version | Aporta |
+|--------|-------------|---------|--------|
+| `powerbi-authoring` | copilot-plugins | 0.3.9 | Modelos semanticos, informes PBIP/PBIR, MCP de modelado |
+| `microsoft-365-agents-toolkit` | copilot-plugins | 1.3.1 | Agentes declarativos M365, apps de Teams |
+| `power-automate` | copilot-plugins | 2.2.0 | Flujos cloud y RPA, MCP flowagent y Microsoft Learn |
+| `power-bi-development` | awesome-copilot | 1.0.0 | 4 modos expertos de Power BI |
+| `awesome-copilot` | awesome-copilot | 1.1.0 | Catalogo comunitario de agentes/skills |
+| `mcp-m365-copilot` | awesome-copilot | 1.0.0 | Agentes declarativos M365 con MCP |
+| `skills-for-copilot-studio` | awesome-copilot | 1.0.11 | Suite de Copilot Studio (Advisor/Author/Manage/Test) |
+| `ai-ready` | awesome-copilot | 1.1.0 | Configuracion AI-ready para cualquier repo |
+| `ai-team-orchestration` | awesome-copilot | 1.0.0 | Equipo virtual dev / producer / QA |
+
+Detalle de agentes, skills y servidores MCP: [Guia de plugins](docs/plugins-guide.md).
+
 ## MCP Servers configurados
 
 | Server | Descripcion | Config |
 |--------|-------------|--------|
 | context7 | Documentacion actualizada de librerias via LLM | `mcp/mcp.json` |
+| google-analytics | Datos de GA4 | `mcp/mcp.json` |
+| google-ads | Campanas de Google Ads | `mcp/mcp.json` |
+| meta-ads | Campanas de Meta Ads | `mcp/mcp.json` |
+| bigquery | Consultas a BigQuery | `mcp/mcp.json` |
+| postgres | Consultas a PostgreSQL | `mcp/mcp.json` |
+| dv360 | Display & Video 360 | `mcp/mcp.json` |
+| powerbi-modeling-mcp | Modelado de Power BI / Fabric | plugin `powerbi-authoring` |
+| flowagent | Power Automate | plugin `power-automate` |
+| microsoft-learn | Documentacion oficial de Microsoft | plugin `power-automate` |
+| awesome-copilot | Catalogo comunitario (requiere Docker) | plugin `awesome-copilot` |
 
 ## Script de generacion de imagenes
 
@@ -122,7 +161,10 @@ Modelos de imagen soportados:
 ## Notas tecnicas
 
 - Las skills se cargan desde `~/.copilot/plugins/superpowers/skills/`
-- El MCP global se lee desde `~/.copilot/mcp.json`
+- Los plugins de marketplace se cachean en `~/.copilot/installed-plugins/<marketplace>/<plugin>/`
+- El registro de plugins vive en `~/.copilot/config.json` (`installedPlugins`) y su
+  activacion en `~/.copilot/settings.json` (`enabledPlugins`)
+- El MCP global se lee desde `~/.copilot/mcp.json`; cada plugin puede aportar el suyo en `.mcp.json`
 - Los proveedores de modelos se almacenan en `~/.copilot/data.db` (SQLite)
 - El plugin `superpowers` debe estar instalado (viene por defecto en Copilot v1.0+)
 
@@ -130,4 +172,5 @@ Modelos de imagen soportados:
 
 - [Guia NVIDIA NIM](docs/nvidia-nim-setup.md)
 - [Guia de Skills](docs/skills-guide.md)
+- [Guia de Plugins](docs/plugins-guide.md)
 - [Catalogo de modelos](docs/model-catalog.md)

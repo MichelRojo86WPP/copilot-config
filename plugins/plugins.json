@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json.schemastore.org/base.json",
+  "description": "Inventario de plugins de GitHub Copilot instalados. Usar setup/install-plugins.ps1 para restaurarlos en otra maquina.",
+  "updated_at": "2026-07-29",
+  "marketplaces": {
+    "copilot-plugins": "Marketplace oficial de plugins de GitHub Copilot",
+    "awesome-copilot": "Marketplace comunitario awesome-copilot"
+  },
+  "plugins": [
+    {
+      "name": "powerbi-authoring",
+      "marketplace": "copilot-plugins",
+      "version": "0.3.9",
+      "description": "Autoria de modelos semanticos e informes Power BI (PBIP/PBIR) y despliegue a Fabric.",
+      "provides": {
+        "skills": [
+          "semantic-model-authoring",
+          "powerbi-report-planning",
+          "powerbi-report-design",
+          "powerbi-report-authoring",
+          "powerbi-report-management",
+          "check-updates"
+        ],
+        "mcp_servers": ["powerbi-modeling-mcp"]
+      }
+    },
+    {
+      "name": "microsoft-365-agents-toolkit",
+      "marketplace": "copilot-plugins",
+      "version": "1.3.1",
+      "description": "Creacion, despliegue y evaluacion de agentes declarativos de M365 Copilot y apps de Teams.",
+      "provides": {
+        "skills": [
+          "declarative-agent-developer",
+          "install-atk",
+          "m365-agent-evaluator",
+          "teams-app-developer",
+          "ui-widget-developer"
+        ]
+      }
+    },
+    {
+      "name": "power-automate",
+      "marketplace": "copilot-plugins",
+      "version": "2.2.0",
+      "description": "Gestion completa de flujos de Power Automate: crear, editar, ejecutar, diagnosticar y flujos de escritorio (RPA).",
+      "provides": {
+        "skills": [
+          "browse-flows",
+          "build-flow",
+          "create-flow",
+          "debug-flow",
+          "diagnose-flow",
+          "manage-desktop-flows",
+          "manage-flows",
+          "route-environments",
+          "setup",
+          "report-issue"
+        ],
+        "mcp_servers": ["flowagent", "microsoft-learn"]
+      }
+    },
+    {
+      "name": "power-bi-development",
+      "marketplace": "awesome-copilot",
+      "version": "1.0.0",
+      "description": "Modos expertos de Power BI: modelado de datos, DAX, rendimiento y visualizacion.",
+      "provides": {
+        "agents": [
+          "power-bi-data-modeling-expert",
+          "power-bi-dax-expert",
+          "power-bi-performance-expert",
+          "power-bi-visualization-expert"
+        ],
+        "skills": [
+          "power-bi-dax-optimization",
+          "power-bi-model-design-review",
+          "power-bi-performance-troubleshooting",
+          "power-bi-report-design-consultation"
+        ]
+      }
+    },
+    {
+      "name": "awesome-copilot",
+      "marketplace": "awesome-copilot",
+      "version": "1.1.0",
+      "description": "Descubrimiento y sugerencia de agentes, instrucciones y skills del repositorio awesome-copilot.",
+      "provides": {
+        "agents": ["meta-agentic-project-scaffold"],
+        "skills": [
+          "suggest-awesome-github-copilot-agents",
+          "suggest-awesome-github-copilot-instructions",
+          "suggest-awesome-github-copilot-skills"
+        ],
+        "mcp_servers": ["awesome-copilot"],
+        "requires": ["docker"]
+      }
+    },
+    {
+      "name": "mcp-m365-copilot",
+      "marketplace": "awesome-copilot",
+      "version": "1.0.0",
+      "description": "Agentes declarativos de M365 Copilot basados en Model Context Protocol.",
+      "provides": {
+        "agents": ["mcp-m365-agent-expert"],
+        "skills": [
+          "mcp-create-adaptive-cards",
+          "mcp-create-declarative-agent",
+          "mcp-deploy-manage-agents"
+        ]
+      }
+    },
+    {
+      "name": "skills-for-copilot-studio",
+      "marketplace": "awesome-copilot",
+      "version": "1.0.11",
+      "description": "Suite completa para Copilot Studio: diseno, autoria de YAML, ALM y testing de agentes.",
+      "provides": {
+        "agents": [
+          "copilot-studio-advisor",
+          "copilot-studio-author",
+          "copilot-studio-manage",
+          "copilot-studio-test"
+        ],
+        "skills": [
+          "new-topic",
+          "edit-agent",
+          "add-action",
+          "add-knowledge",
+          "add-adaptive-card",
+          "add-generative-answers",
+          "add-global-variable",
+          "add-node",
+          "add-other-agents",
+          "edit-action",
+          "edit-triggers",
+          "manage-agent",
+          "validate",
+          "lookup-schema",
+          "list-kinds",
+          "list-topics",
+          "create-eval",
+          "create-eval-set",
+          "run-eval",
+          "analyze-evals",
+          "run-tests-kit",
+          "chat-with-agent",
+          "chat-directline",
+          "chat-sdk",
+          "directline-chat",
+          "test-auth"
+        ]
+      }
+    },
+    {
+      "name": "ai-ready",
+      "marketplace": "awesome-copilot",
+      "version": "1.1.0",
+      "description": "Analiza un repositorio y genera configuracion AI-ready (AGENTS.md, copilot-instructions.md, skills, workflows CI).",
+      "provides": {
+        "skills": ["ai-ready"]
+      }
+    },
+    {
+      "name": "ai-team-orchestration",
+      "marketplace": "awesome-copilot",
+      "version": "1.0.0",
+      "description": "Equipo virtual de desarrollo: producer (planificacion), dev (implementacion) y QA (testing).",
+      "provides": {
+        "agents": ["ai-team-dev", "ai-team-producer", "ai-team-qa"],
+        "skills": [
+          "ai-team-orchestration",
+          "orchestrate",
+          "agent-merge",
+          "agentfinder",
+          "create-canvas",
+          "customize-cloud-agent"
+        ]
+      }
+    }
+  ]
+}
