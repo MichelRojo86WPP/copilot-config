@@ -21,14 +21,12 @@ NVIDIA_PROVIDER_ID = "203e8e64-ec9a-44ac-915e-d454697bacc6"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
-# Modelos NVIDIA NIM a registrar (los 8 mejores del catalogo)
+# Modelos verificados como disponibles en el plan gratuito de build.nvidia.com
+# Ultima verificacion: 2026-08-03
+# Eliminados por EOL (410) o no disponibles en cuenta gratuita (404):
+#   Nemotron Ultra 253B, Llama 4 Maverick 17B, Mistral Large 2,
+#   Codestral 22B, Qwen 3.5 122B, Qwen3-Coder 480B, Kimi K2.6, GLM-5.2
 NVIDIA_MODELS = [
-    {
-        "model_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
-        "display_name": "Nemotron Ultra 253B",
-        "max_prompt": 131072,
-        "max_output": 32768,
-    },
     {
         "model_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
         "display_name": "Nemotron Super 49B",
@@ -42,51 +40,9 @@ NVIDIA_MODELS = [
         "max_output": 32768,
     },
     {
-        "model_id": "meta/llama-4-maverick-17b-128e-instruct",
-        "display_name": "Llama 4 Maverick 17B",
-        "max_prompt": 1048576,
-        "max_output": 32768,
-    },
-    {
         "model_id": "deepseek-ai/deepseek-v4-flash",
         "display_name": "DeepSeek V4 Flash",
         "max_prompt": 1000000,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "mistralai/mistral-large-2-instruct",
-        "display_name": "Mistral Large 2",
-        "max_prompt": 131072,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "mistralai/codestral-22b-instruct-v0.1",
-        "display_name": "Codestral 22B",
-        "max_prompt": 262144,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "qwen/qwen3.5-122b-a10b",
-        "display_name": "Qwen 3.5 122B",
-        "max_prompt": 131072,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "moonshotai/kimi-k2.6",
-        "display_name": "Kimi K2.6",
-        "max_prompt": 262144,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "z-ai/glm-5.2",
-        "display_name": "GLM-5.2",
-        "max_prompt": 1000000,
-        "max_output": 32768,
-    },
-    {
-        "model_id": "qwen/qwen3-coder-480b-a35b-instruct",
-        "display_name": "Qwen3-Coder 480B",
-        "max_prompt": 262144,
         "max_output": 32768,
     },
 ]
