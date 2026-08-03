@@ -117,35 +117,74 @@ def install_provider(db_path: str, api_key: str):
         con.close()
         raise RuntimeError("La base de datos no tiene las tablas esperadas (model_providers, provider_models)")
 
-    headers_json = json.dumps({"Authorization": f"Bearer {api_key}"})
+    columns = {r[1] for r in cur.execute("PRAGMA table_info(model_providers)").fetchall()}
+    uses_settings_json = "settings_json" in columns
 
-    # Insertar o actualizar provider
+    # authKind='none' evita que la app busque un secreto en el llavero del
+    # sistema (Windows Credential Manager, donde no existe ninguna entrada
+    # para este proveedor); en su lugar, headersJson se envia tal cual en
+    # cada peticion, ya con la API key real incluida.
+    real_headers_json = json.dumps({"Authorization": f"Bearer {api_key}"})
+
     existing = cur.execute(
         "SELECT id FROM model_providers WHERE id=?", (NVIDIA_PROVIDER_ID,)
     ).fetchone()
 
-    if existing:
-        cur.execute(
-            "UPDATE model_providers SET headers_json=?, updated_at=? WHERE id=?",
-            (headers_json, NOW, NVIDIA_PROVIDER_ID),
-        )
-        print(f"[OK] Proveedor NVIDIA NIM actualizado (API key refreshed)")
+    if uses_settings_json:
+        # Esquema actual: columnas planas colapsadas en settings_json (JSON)
+        settings = {
+            "baseUrl": NVIDIA_BASE_URL,
+            "wireApi": "completions",
+            "azureApiVersion": None,
+            "authKind": "none",
+            "headersJson": real_headers_json,
+        }
+        settings_json = json.dumps(settings)
+
+        if existing:
+            cur.execute(
+                "UPDATE model_providers SET settings_json=?, updated_at=? WHERE id=?",
+                (settings_json, NOW, NVIDIA_PROVIDER_ID),
+            )
+            print(f"[OK] Proveedor NVIDIA NIM actualizado (settings_json, API key refrescada)")
+        else:
+            cur.execute("""
+                INSERT INTO model_providers
+                  (id, name, type, settings_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                NVIDIA_PROVIDER_ID,
+                "NVIDIA NIM (build.nvidia.com)",
+                "openai",
+                settings_json,
+                NOW,
+                NOW,
+            ))
+            print(f"[OK] Proveedor NVIDIA NIM instalado (settings_json)")
     else:
-        cur.execute("""
-            INSERT INTO model_providers
-              (id, name, base_url, type, auth_kind, headers_json, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            NVIDIA_PROVIDER_ID,
-            "NVIDIA NIM (build.nvidia.com)",
-            NVIDIA_BASE_URL,
-            "openai",
-            "api_key",
-            headers_json,
-            NOW,
-            NOW,
-        ))
-        print(f"[OK] Proveedor NVIDIA NIM instalado")
+        # Esquema antiguo (columnas planas) - se mantiene por compatibilidad
+        if existing:
+            cur.execute(
+                "UPDATE model_providers SET headers_json=?, updated_at=? WHERE id=?",
+                (real_headers_json, NOW, NVIDIA_PROVIDER_ID),
+            )
+            print(f"[OK] Proveedor NVIDIA NIM actualizado (API key refreshed)")
+        else:
+            cur.execute("""
+                INSERT INTO model_providers
+                  (id, name, base_url, type, auth_kind, headers_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                NVIDIA_PROVIDER_ID,
+                "NVIDIA NIM (build.nvidia.com)",
+                NVIDIA_BASE_URL,
+                "openai",
+                "api_key",
+                real_headers_json,
+                NOW,
+                NOW,
+            ))
+            print(f"[OK] Proveedor NVIDIA NIM instalado")
 
     # Insertar modelos (skip duplicados)
     installed = 0
