@@ -18,6 +18,7 @@ param(
 
 $CopilotDir = "$env:USERPROFILE\.copilot"
 $SuperpowersDir = "$CopilotDir\plugins\superpowers\skills"
+$ExtensionsDir  = "$CopilotDir\extensions"
 
 Write-Host ""
 Write-Host "============================================"
@@ -133,12 +134,38 @@ if (Test-Path $ScriptSrc) {
 
 # --- Resumen ---
 Write-Host ""
+Write-Host "[5/5] Instalando extensiones de agente (Meridian, CausalImpact)..."
+
+$ExtSrc = "$RepoRoot\extensions"
+$CustomExtensions = @(
+    "meridian-expert",
+    "causal-impact-expert"
+)
+
+New-Item -ItemType Directory -Path $ExtensionsDir -Force | Out-Null
+$extInstalled = 0
+foreach ($ext in $CustomExtensions) {
+    $src = "$ExtSrc\$ext"
+    $dst = "$ExtensionsDir\$ext"
+    if (Test-Path $src) {
+        New-Item -ItemType Directory -Path $dst -Force | Out-Null
+        Copy-Item "$src\*" $dst -Recurse -Force
+        Write-Host "  [OK] $ext"
+        $extInstalled++
+    } else {
+        Write-Host "  [!]  $ext (no encontrado en $src)"
+    }
+}
+Write-Host "      $extInstalled/$($CustomExtensions.Count) extensiones instaladas"
+
+# --- Resumen ---
+Write-Host ""
 Write-Host "============================================"
 Write-Host " Instalacion completada"
 Write-Host "============================================"
 Write-Host ""
 Write-Host "SIGUIENTE PASO: Reinicia GitHub Copilot para"
-Write-Host "que cargue las nuevas skills y configuracion."
+Write-Host "que cargue las nuevas skills, extensiones y configuracion."
 Write-Host ""
 Write-Host "Comandos utiles:"
 Write-Host "  Generar imagen: python ~/nvidia_gen.py 'prompt'"
