@@ -33,10 +33,7 @@ from pathlib import Path
 # Configuracion de API keys
 # ---------------------------------------------------------------------------
 
-NVIDIA_API_KEY = os.environ.get(
-    "NVIDIA_API_KEY",
-    "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",
-)
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 REPLICATE_TOKEN = os.environ.get("REPLICATE_API_TOKEN", "")
 

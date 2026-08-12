@@ -90,5 +90,15 @@ La API key expiró o es incorrecta. Obtener una nueva en [build.nvidia.com](http
 python setup/install-nvidia-provider.py --api-key "nvapi-NUEVA_KEY"
 ```
 
+### Error "requires apiKey but no secret was found in the keychain"
+El proveedor conserva la cabecera de autorizacion, pero Copilot intenta buscar
+la API key en el almacen de credenciales del sistema. Vuelve a ejecutar el
+instalador para migrar el proveedor a autenticacion por cabecera:
+```powershell
+python setup/install-nvidia-provider.py --api-key "nvapi-TU_KEY"
+```
+Despues, reinicia GitHub Copilot y abre una sesion nueva antes de seleccionar
+el modelo.
+
 ### Error 429 (Rate limit)
 Has superado los ~40 RPM del free tier. Espera 1 minuto.

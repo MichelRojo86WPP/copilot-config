@@ -135,7 +135,7 @@ def install_provider(db_path: str, api_key: str):
                 "NVIDIA NIM (build.nvidia.com)",
                 NVIDIA_BASE_URL,
                 "openai",
-                "api_key",
+                "none",
                 real_headers_json,
                 NOW,
                 NOW,
@@ -220,6 +220,9 @@ def main():
     if not api_key:
         print("[ERROR] Se necesita una API key. Usa --api-key nvapi-TU_KEY")
         print("        O define la variable de entorno NVIDIA_API_KEY")
+        sys.exit(1)
+    if not api_key.startswith("nvapi-"):
+        print("[ERROR] La API key de NVIDIA debe empezar por 'nvapi-'")
         sys.exit(1)
 
     install_provider(db_path, api_key)
