@@ -6,19 +6,31 @@ Todos son **gratuitos** (~40 RPM, sin creditos, sin tarjeta).
 
 ## Modelos registrados en Copilot (listos para usar)
 
+> Verificado el 2026-08-12 llamando a la API. Solo se registran modelos que
+> responden correctamente en el plan gratuito.
+
 | Modelo | Display | Contexto | Especialidad |
 |--------|---------|----------|-------------|
-| `nvidia/llama-3.1-nemotron-ultra-253b-v1` | Nemotron Ultra 253B | 131K | Razonamiento avanzado, flagship |
 | `nvidia/llama-3.3-nemotron-super-49b-v1` | Nemotron Super 49B | 131K | Equilibrio velocidad/calidad |
-| `meta/llama-4-maverick-17b-128e-instruct` | Llama 4 Maverick 17B | **1M** | Contexto enorme, multimodal |
-| `deepseek-ai/deepseek-v4-flash` | DeepSeek V4 Flash | **1M** | Rapido, contexto enorme |
-| `mistralai/codestral-22b-instruct-v0.1` | Codestral 22B | 262K | **Codigo** especializado |
 | `meta/llama-3.3-70b-instruct` | Llama 3.3 70B | 131K | Proposito general |
-| `mistralai/mistral-large-2-instruct` | Mistral Large 2 | 131K | Proposito general |
-| `qwen/qwen3.5-122b-a10b` | Qwen 3.5 122B | 131K | Multilingue |
-| `moonshotai/kimi-k2.6` | Kimi K2.6 | 262K | **Agentic + codigo** multimodal (1T MoE) |
-| `z-ai/glm-5.2` | GLM-5.2 | **1M** | Coding/agentic SOTA, contexto 1M (753B MoE) |
-| `qwen/qwen3-coder-480b-a35b-instruct` | Qwen3-Coder 480B | 262K | **Codigo** especialista nivel Claude Sonnet |
+| `deepseek-ai/deepseek-v4-flash-0731` | DeepSeek V4 Flash | **1M** | Rapido, contexto enorme |
+
+### Retirados del registro
+
+Estos modelos estaban registrados antes pero ya no son utilizables: devuelven
+410 (fin de vida) o 404 en cuenta gratuita.
+
+| Modelo | Motivo |
+|--------|--------|
+| `deepseek-ai/deepseek-v4-flash` | EOL el 2026-08-07 — usar la variante `-0731` |
+| `nvidia/llama-3.1-nemotron-ultra-253b-v1` | No disponible en cuenta gratuita |
+| `meta/llama-4-maverick-17b-128e-instruct` | No disponible en cuenta gratuita |
+| `mistralai/codestral-22b-instruct-v0.1` | No disponible en cuenta gratuita |
+| `mistralai/mistral-large-2-instruct` | No disponible en cuenta gratuita |
+| `qwen/qwen3.5-122b-a10b` | No disponible en cuenta gratuita |
+| `moonshotai/kimi-k2.6` | No disponible en cuenta gratuita |
+| `z-ai/glm-5.2` | No disponible en cuenta gratuita |
+| `qwen/qwen3-coder-480b-a35b-instruct` | No disponible en cuenta gratuita |
 
 ## LLMs de proposito general
 
@@ -35,7 +47,7 @@ Todos son **gratuitos** (~40 RPM, sin creditos, sin tarjeta).
 | `qwen/qwen3.5-122b-a10b` | 131K | Qwen 3.5 multilingue |
 | `qwen/qwen3.5-397b-a17b` | 131K | Qwen 3.5 grande |
 | `google/gemma-4-31b-it` | 131K | Google Gemma 4 |
-| `deepseek-ai/deepseek-v4-flash` | 1M | DeepSeek rapido |
+| `deepseek-ai/deepseek-v4-flash-0731` | 1M | DeepSeek rapido |
 | `deepseek-ai/deepseek-v4-pro` | 1M | DeepSeek completo |
 | `openai/gpt-oss-120b` | 131K | GPT open source |
 | `moonshotai/kimi-k2.6` | 262K | Moonshot Kimi (agentic + codigo) |

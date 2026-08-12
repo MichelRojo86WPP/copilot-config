@@ -43,18 +43,13 @@ python setup/install-nvidia-provider.py --remove
 
 Los modelos se registran en la DB de Copilot. Ver [model-catalog.md](model-catalog.md) para la lista completa.
 
-Los registrados actualmente en Copilot:
-- Nemotron Ultra 253B — flagship NVIDIA, razonamiento avanzado
+Los registrados actualmente en Copilot (verificados el 2026-08-12):
 - Nemotron Super 49B — equilibrio velocidad/calidad
-- Llama 4 Maverick 17B — contexto 1M tokens
-- DeepSeek V4 Flash — contexto 1M, muy rapido
-- Codestral 22B — especializado en codigo
 - Llama 3.3 70B — proposito general
-- Mistral Large 2 — proposito general
-- Qwen 3.5 122B — multilingue
-- Kimi K2.6 — agentic + coding largo, multimodal (1T MoE)
-- GLM-5.2 — coding/agentic con contexto 1M (753B MoE)
-- Qwen3-Coder 480B — especialista en codigo nivel Claude Sonnet
+- DeepSeek V4 Flash (`deepseek-v4-flash-0731`) — contexto 1M, muy rapido
+
+> El alias `deepseek-ai/deepseek-v4-flash` (sin fecha) llego a fin de vida el
+> 2026-08-07 y devuelve HTTP 410. Usa siempre la variante fechada.
 
 ## Limitaciones del free tier
 
@@ -99,6 +94,19 @@ python setup/install-nvidia-provider.py --api-key "nvapi-TU_KEY"
 ```
 Despues, reinicia GitHub Copilot y abre una sesion nueva antes de seleccionar
 el modelo.
+
+### Error 410 (Gone) — "has reached its end of life"
+NVIDIA retira modelos periodicamente. El alias sin fecha (por ejemplo
+`deepseek-ai/deepseek-v4-flash`) deja de existir y hay que usar la variante
+fechada (`deepseek-ai/deepseek-v4-flash-0731`). Para ver que IDs siguen vivos
+en tu cuenta, consulta la API:
+```powershell
+curl -H "Authorization: Bearer $env:NVIDIA_API_KEY" https://integrate.api.nvidia.com/v1/models
+```
+Despues actualiza el registro con:
+```powershell
+python setup/install-nvidia-provider.py --api-key "nvapi-TU_KEY"
+```
 
 ### Error 429 (Rate limit)
 Has superado los ~40 RPM del free tier. Espera 1 minuto.

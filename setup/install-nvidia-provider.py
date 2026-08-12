@@ -22,10 +22,12 @@ NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 # Modelos verificados como disponibles en el plan gratuito de build.nvidia.com
-# Ultima verificacion: 2026-08-03
+# Ultima verificacion: 2026-08-12
 # Eliminados por EOL (410) o no disponibles en cuenta gratuita (404):
 #   Nemotron Ultra 253B, Llama 4 Maverick 17B, Mistral Large 2,
 #   Codestral 22B, Qwen 3.5 122B, Qwen3-Coder 480B, Kimi K2.6, GLM-5.2
+# DeepSeek V4 Flash: el alias sin fecha llego a EOL el 2026-08-07; se usa
+# la variante fechada 'deepseek-v4-flash-0731', que sigue disponible.
 NVIDIA_MODELS = [
     {
         "model_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
@@ -40,7 +42,7 @@ NVIDIA_MODELS = [
         "max_output": 32768,
     },
     {
-        "model_id": "deepseek-ai/deepseek-v4-flash",
+        "model_id": "deepseek-ai/deepseek-v4-flash-0731",
         "display_name": "DeepSeek V4 Flash",
         "max_prompt": 1000000,
         "max_output": 32768,

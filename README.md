@@ -82,21 +82,18 @@ Para activar una skill en Copilot escribe `/skill nombre-de-la-skill` en cualqui
 
 ## Modelos NVIDIA NIM configurados
 
-Los siguientes modelos estan disponibles directamente en el selector de modelos de Copilot:
+Los siguientes modelos estan disponibles directamente en el selector de modelos de Copilot.
+Verificados el 2026-08-12 contra la API:
 
 | Modelo | ID | Contexto |
 |--------|----|----------|
-| Nemotron Ultra 253B | `nvidia/llama-3.1-nemotron-ultra-253b-v1` | 131K |
 | Nemotron Super 49B | `nvidia/llama-3.3-nemotron-super-49b-v1` | 131K |
 | Llama 3.3 70B | `meta/llama-3.3-70b-instruct` | 131K |
-| Llama 4 Maverick 17B | `meta/llama-4-maverick-17b-128e-instruct` | 1M |
-| DeepSeek V4 Flash | `deepseek-ai/deepseek-v4-flash` | 1M |
-| Mistral Large 2 | `mistralai/mistral-large-2-instruct` | 131K |
-| Codestral 22B | `mistralai/codestral-22b-instruct-v0.1` | 262K |
-| Qwen 3.5 122B | `qwen/qwen3.5-122b-a10b` | 131K |
-| Kimi K2.6 | `moonshotai/kimi-k2.6` | 262K |
-| GLM-5.2 | `z-ai/glm-5.2` | 1M |
-| Qwen3-Coder 480B | `qwen/qwen3-coder-480b-a35b-instruct` | 262K |
+| DeepSeek V4 Flash | `deepseek-ai/deepseek-v4-flash-0731` | 1M |
+
+> El resto de modelos que aparecian antes (Nemotron Ultra, Llama 4 Maverick,
+> Codestral, Mistral Large 2, Qwen, Kimi, GLM) devuelven 404/410 en cuenta
+> gratuita. Ver [catalogo de modelos](docs/model-catalog.md).
 
 > Todos gratuitos via NVIDIA NIM (~40 RPM, sin limite de creditos).
 > Obtener API key gratuita: [build.nvidia.com](https://build.nvidia.com)
