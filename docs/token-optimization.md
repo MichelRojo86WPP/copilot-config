@@ -31,20 +31,36 @@ Cada plugin instalado y activo inyecta las definiciones de sus herramientas
 —nombre, descripción y esquema JSON completo de parámetros— en el contexto
 del modelo **en todas y cada una de las llamadas**, se usen o no.
 
-Medición con `tiktoken` (codificación `cl100k_base`) sobre las definiciones
-reales:
+### Prueba A/B empírica
 
-| Plugin | Herramientas | Coste fijo por llamada |
+Mismo prompt trivial (`"Responde unicamente: ok"`), misma máquina, sesión
+nueva y limpia en cada caso, con minutos de diferencia:
+
+| Perfil | Tokens de entrada | Créditos AI |
 |---|---|---|
-| `power-automate` (flowagent) | ~45 | **~22.800 tokens** |
-| `powerbi-authoring` (powerbi-modeling-mcp) | ~20 | **~15.400 tokens** |
+| `full` (9 plugins) | **95.200** | **23,81** |
+| `analytics` (ninguno) | **32.500** | **8,14** |
+| **Diferencia** | **−62.700 (−66%)** | **−15,67 (−66%)** |
+
+Es decir: **una pregunta trivial costaba casi tres veces más** solo por
+tener cargadas herramientas que no se iban a usar.
+
+> Estos 62.700 tokens son el coste real medido, y superan en un 53% la
+> estimación previa por `tiktoken` (~41.000). La estimación contaba las
+> definiciones de las herramientas, pero no las instrucciones de uso,
+> los agentes y las skills que cada plugin arrastra consigo.
+
+### Desglose estimado por plugin
+
+Medición con `tiktoken` (codificación `cl100k_base`) sobre las definiciones
+de herramientas. Sirve para ordenar culpables, no como cifra total:
+
+| Plugin | Herramientas | Coste aprox. |
+|---|---|---|
+| `power-automate` (flowagent) | ~45 | ~22.800 tokens |
+| `powerbi-authoring` (powerbi-modeling-mcp) | ~20 | ~15.400 tokens |
 | `skills-for-copilot-studio` | varias | ~1.200 tokens |
 | Resto de plugins | — | ~1.600 tokens |
-| **Total con todo activo** | | **~41.000 tokens/llamada** |
-
-Sobre el consumo real medido, esos ~41.000 tokens fijos multiplicados por 758
-llamadas suponen **en torno al 25% del gasto de entrada** en sesiones donde no
-se tocó ninguna de esas herramientas.
 
 > El catálogo de skills, en cambio, es barato: ~177 tokens por skill, unos
 > 5.800 tokens para las 33. No merece la pena recortarlo, y las skills sí se
@@ -75,6 +91,21 @@ de perfil.
 | `m365` | toolkit M365, Power Automate, Copilot Studio | ~24.700 |
 | `full` | los 9 | ~41.000 |
 
+> Las cifras de coste que imprime el script son las estimadas por `tiktoken`.
+> El coste real medido de `full` frente a `analytics` es de **~62.700 tokens**,
+> así que el ahorro efectivo es mayor que el que anuncia.
+
+### Cómo verificar que está aplicado
+
+```powershell
+copilot plugin list     # los plugins deben aparecer como [disabled]
+```
+
+Esta es la comprobación fiable: el CLI es la fuente de verdad. Ojo, porque
+`~/.copilot/config.json` mantiene `"enabled": true` en `installedPlugins[]`
+aunque estén desactivados — ese fichero refleja la instalación, no el estado
+activo. El estado real lo manda `settings.json` → `enabledPlugins`.
+
 ### Qué NO se pierde con el perfil `analytics`
 
 Las **skills** y las **extensiones propias** no son plugins: se instalan por
@@ -91,8 +122,11 @@ Automate o de **modificar** modelos semánticos de Power BI vía MCP. Para
 analizar, diseñar y escribir DAX no hace falta: para eso está la skill
 `powerbi-developer`, que sigue activa.
 
-> **El cambio surte efecto al reiniciar Copilot**, porque los plugins se cargan
-> al arrancar la sesión. El script deja un respaldo en `settings.json.bak`.
+> **El cambio solo afecta a sesiones nuevas.** Los plugins se cargan al
+> arrancar la sesión, así que la que tengas abierta seguirá con los de antes
+> aunque reinicies la aplicación: hay procesos que sobreviven. Ábrela nueva y
+> comprueba con `copilot plugin list`. El script deja un respaldo en
+> `settings.json.bak`.
 
 ---
 
@@ -130,26 +164,37 @@ Opus se llevó el **81%** del gasto del periodo.
 
 ---
 
-## Impacto conjunto estimado
+## Impacto conjunto
 
-| Palanca | Ahorro estimado |
-|---|---|
-| Perfil `analytics` | ~25% |
-| Una sesión por tarea | 30–40% |
-| Modelo según tarea | ~30% |
+| Palanca | Ahorro | Estado |
+|---|---|---|
+| Perfil `analytics` | **−66%** en el coste de arranque | **medido (A/B)** |
+| Una sesión por tarea | 30–40% | estimado sobre datos reales |
+| Modelo según tarea | ~30% | estimado sobre datos reales |
 
 No son acumulativos de forma lineal —actúan sobre la misma base—, pero
 aplicados a la vez el consumo debería reducirse **a menos de la mitad**.
 
 ---
 
-## Verificar que funciona
+## Reproducir la medición
+
+La prueba A/B es sencilla y cuesta unos pocos créditos:
 
 ```powershell
-.\setup\switch-profile.ps1 status
+# 1. Con todo activo
+.\setup\switch-profile.ps1 full
+cd $env:TEMP; copilot -p "Responde unicamente: ok" --allow-all-tools
+
+# 2. Sin plugins
+.\setup\switch-profile.ps1 analytics
+cd $env:TEMP; copilot -p "Responde unicamente: ok" --allow-all-tools
 ```
 
-Tras reiniciar Copilot con el perfil `analytics`, una llamada trivial en una
-sesión nueva debería costar bastante menos que antes. La forma de comprobarlo
-es comparar el mínimo de `input_tokens` antes y después en el almacén local de
-sesiones.
+Cada ejecución imprime al terminar una línea `Tokens ↑ …` y otra
+`AI Credits …`. Esa es la comparación limpia: mismo prompt, sesión nueva,
+sin histórico que contamine el dato.
+
+Resultado obtenido en esta máquina: **95,2k / 23,81 créditos** frente a
+**32,5k / 8,14 créditos**.
+

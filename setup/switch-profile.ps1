@@ -13,8 +13,10 @@
     dejando el resto instalados pero inactivos (no se pierden: volver a
     activarlos es cambiar de perfil).
 
-    IMPORTANTE: el cambio surte efecto al reiniciar Copilot, porque los
-    plugins se cargan al arrancar la sesion.
+    IMPORTANTE: el cambio solo afecta a SESIONES NUEVAS. Los plugins se cargan
+    al arrancar la sesion, asi que la que tengas abierta seguira con los de
+    antes aunque reinicies la aplicacion (hay procesos que sobreviven).
+    Verifica con 'copilot plugin list': deben aparecer como [disabled].
 
 .PARAMETER Perfil
     analytics  Analitica avanzada (CausalImpact, GeoX, Meridian MMM, Power BI
@@ -202,6 +204,7 @@ if ($delta -gt 0) {
 }
 
 Write-Host ''
-Write-Host '  REINICIA Copilot para que el cambio surta efecto.' -ForegroundColor Yellow
+Write-Host '  Solo afecta a SESIONES NUEVAS: abre una nueva, no vale reiniciar.' -ForegroundColor Yellow
+Write-Host '  Verifica con:  copilot plugin list   (deben salir [disabled])' -ForegroundColor Yellow
 Write-Host "  (respaldo del estado anterior en settings.json.bak)" -ForegroundColor DarkGray
 Write-Host ''
