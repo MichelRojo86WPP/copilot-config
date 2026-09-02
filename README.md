@@ -68,8 +68,8 @@ cd copilot-config
 ### Opcion 2: Manual
 
 ```powershell
-# 1. Copiar skills al directorio global de superpowers
-$dst = "$env:USERPROFILE\.copilot\plugins\superpowers\skills"
+# 1. Copiar skills al directorio oficial de personal skills
+$dst = "$env:USERPROFILE\.copilot\skills"
 Copy-Item skills\* $dst -Recurse -Force
 
 # 2. Copiar extensiones al scope de usuario
@@ -179,13 +179,28 @@ Modelos de imagen soportados:
 
 ## Notas tecnicas
 
-- Las skills se cargan desde `~/.copilot/plugins/superpowers/skills/`
+- Las skills se instalan en `~/.copilot/skills/`, la **ruta oficial de personal skills**.
+  La leen Copilot CLI, la app de Copilot y el modo agente de VS Code, en cualquier repositorio.
+- Se replican ademas en `~/.copilot/plugins/superpowers/skills/` como **espejo opcional**,
+  solo por compatibilidad con la instalacion anterior. Si el plugin `superpowers` no esta
+  instalado, el espejo se omite y **no es un error**: el conocimiento no depende de el.
 - Las extensiones se cargan desde `~/.copilot/extensions/` (scope usuario, todos los repos)
 - El MCP global se lee desde `~/.copilot/mcp.json`
 - Los proveedores de modelos se almacenan en `~/.copilot/data.db` (SQLite)
-- El plugin `superpowers` debe estar instalado (viene por defecto en Copilot v1.0+)
 - El instalador **borra y recrea** cada carpeta destino, de forma que los ficheros
   eliminados en el repo no sobreviven en la instalacion local
+
+### Alcance: donde llega este conocimiento y donde no
+
+| Entorno | Skills disponibles | Como |
+|---|---|---|
+| Copilot CLI / app / VS Code, en tu maquina | Si, en cualquier repositorio | `~/.copilot/skills/` (scope usuario) |
+| Agente en github.com (cloud agent, code review) | **No por defecto** | El runner es efimero y no ve tu `~/.copilot` |
+
+Para dar conocimiento al agente de github.com, el repositorio de cliente debe clonar este
+repositorio durante el arranque, mediante `.github/workflows/copilot-setup-steps.yml`.
+Como este repositorio es **publico**, no hace falta token ni secret. Ver el README de
+`advanced_analytics_melia` para un ejemplo funcionando.
 
 ## Ver documentacion completa
 

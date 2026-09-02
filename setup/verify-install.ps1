@@ -22,6 +22,7 @@ param(
 )
 
 $CopilotDir     = "$env:USERPROFILE\.copilot"
+$SkillsDir      = "$CopilotDir\skills"
 $SuperpowersDir = "$CopilotDir\plugins\superpowers\skills"
 $ExtensionsDir  = "$CopilotDir\extensions"
 
@@ -120,13 +121,26 @@ Write-Host " Verificacion de sincronizacion"
 Write-Host "============================================"
 
 $total = 0
+
+# La ruta oficial es la que decide si la instalacion es correcta.
 $total += Compare-Family -SourceRoot "$RepoRoot\skills" `
-                         -InstalledRoot $SuperpowersDir `
-                         -Marker 'SKILL.md' -Label 'Skills'
+                         -InstalledRoot $SkillsDir `
+                         -Marker 'SKILL.md' -Label 'Skills (~/.copilot/skills)'
 
 $total += Compare-Family -SourceRoot "$RepoRoot\extensions" `
                          -InstalledRoot $ExtensionsDir `
                          -Marker 'extension.mjs' -Label 'Extensiones'
+
+# El espejo en superpowers es opcional: solo se verifica si el plugin existe,
+# y sus divergencias no hacen fallar la verificacion.
+if (Test-Path $SuperpowersDir) {
+    $mirror = Compare-Family -SourceRoot "$RepoRoot\skills" `
+                             -InstalledRoot $SuperpowersDir `
+                             -Marker 'SKILL.md' -Label 'Espejo superpowers (opcional)'
+    if ($mirror -gt 0) {
+        Write-Host "      aviso: el espejo tiene $mirror divergencia(s), no afecta al resultado"
+    }
+}
 
 Write-Host ""
 Write-Host "============================================"
