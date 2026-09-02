@@ -5,7 +5,7 @@
 #   .\setup\install.ps1
 #
 # Que hace este script:
-#   1. Instala las skills custom en el plugin superpowers global
+#   1. Instala las skills custom en el scope de usuario
 #   2. Instala las extensiones de agente en el scope de usuario
 #   3. Instala la configuracion MCP global (context7)
 #   4. Instala el proveedor NVIDIA NIM en la base de datos de Copilot
@@ -14,6 +14,13 @@
 # Las skills y extensiones se descubren dinamicamente: cualquier carpeta
 # nueva en skills/ (con SKILL.md) o en extensions/ (con extension.mjs) se
 # instala sin tocar este script.
+#
+# Destino de las skills:
+#   Principal: ~/.copilot/skills  -> ruta oficial de "personal skills". La leen
+#              Copilot CLI, la app de Copilot y el modo agente de VS Code.
+#   Espejo:    ~/.copilot/plugins/superpowers/skills -> solo si el plugin
+#              superpowers esta instalado, por compatibilidad con la
+#              instalacion anterior. Es opcional: su ausencia no es un error.
 # ============================================================
 
 param(
@@ -24,6 +31,7 @@ param(
 )
 
 $CopilotDir = "$env:USERPROFILE\.copilot"
+$SkillsDir      = "$CopilotDir\skills"
 $SuperpowersDir = "$CopilotDir\plugins\superpowers\skills"
 $ExtensionsDir  = "$CopilotDir\extensions"
 
@@ -40,11 +48,10 @@ if (-not (Test-Path $CopilotDir)) {
     exit 1
 }
 
-if (-not (Test-Path $SuperpowersDir)) {
-    Write-Host "[ERROR] No se encuentra el plugin superpowers: $SuperpowersDir"
-    Write-Host "        El plugin superpowers debe estar instalado en Copilot."
-    exit 1
-}
+# El plugin superpowers ya no es obligatorio. Antes su ausencia abortaba la
+# instalacion, lo que hacia depender todo el conocimiento de un plugin de
+# terceros: si se desinstalaba, se perdian las skills.
+$MirrorToSuperpowers = Test-Path $SuperpowersDir
 
 # --- Helper: instala un directorio de origen en destino ---
 # Devuelve $true si la instalacion se realizo (o se simulo con -DryRun).
@@ -86,17 +93,30 @@ if (Test-Path $SkillsSrc) {
 
 $installed = 0
 foreach ($skill in $SkillDirs) {
+    # Destino principal: ruta oficial de personal skills.
     if (Install-Bundle -Source $skill.FullName `
-                       -Destination "$SuperpowersDir\$($skill.Name)" `
+                       -Destination "$SkillsDir\$($skill.Name)" `
                        -Label $skill.Name) {
         $installed++
+    }
+
+    # Espejo opcional en superpowers, para no romper la instalacion previa.
+    if ($MirrorToSuperpowers) {
+        Install-Bundle -Source $skill.FullName `
+                       -Destination "$SuperpowersDir\$($skill.Name)" `
+                       -Label "$($skill.Name) (espejo superpowers)" | Out-Null
     }
 }
 
 if ($SkillDirs.Count -eq 0) {
     Write-Host "  [!]  No se encontraron skills en $SkillsSrc"
 } else {
-    Write-Host "      $installed/$($SkillDirs.Count) skills instaladas"
+    Write-Host "      $installed/$($SkillDirs.Count) skills instaladas en $SkillsDir"
+    if ($MirrorToSuperpowers) {
+        Write-Host "      espejo replicado en el plugin superpowers"
+    } else {
+        Write-Host "      (superpowers no instalado: se omite el espejo, no es un error)"
+    }
 }
 
 # --- PASO 2: Instalar extensiones de agente ---
