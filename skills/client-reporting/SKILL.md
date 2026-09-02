@@ -1,4 +1,9 @@
-﻿# client-reporting
+---
+name: client-reporting
+description: 'Structure and write client-facing marketing reports: QBRs, quarterly reviews, campaign reports, executive summaries, KPI dashboards and performance narratives. Use when the deliverable is a report or readout rather than an analysis, when insight must lead over raw data, or when depth must be tailored to a C-suite, director or manager audience. Triggers: client report, QBR, executive summary, performance narrative, data storytelling, benchmark analysis, budget pacing narrative, anomaly explanation.'
+---
+
+# client-reporting
 
 ## When to use this skill
 Activate when the user asks about: client reports, QBR, quarterly review, campaign report, executive summary, KPI dashboard, performance narrative, data storytelling, report structure, benchmark analysis, insight vs data, recommendations, Power BI dashboard design for clients, media reporting, marketing reporting, anomaly explanation, budget pacing narrative.

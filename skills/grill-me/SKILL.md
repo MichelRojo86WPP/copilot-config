@@ -1,4 +1,4 @@
-﻿---
+---
 name: grill-me
 description: Relentless sequential interview that stress-tests a plan or design until every decision branch is resolved. Use when the user wants to "grill me", "stress-test the plan", "interrogate my design", "resolve the decision tree", or whenever a plan feels hand-wavy, under-specified, or carries hidden coupling that planning phases must surface before execution. Pairs with the discuss phase and blocks execution until alignment is reached.
 ---

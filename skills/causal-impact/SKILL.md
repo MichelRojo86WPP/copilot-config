@@ -1,3 +1,8 @@
+---
+name: causal-impact
+description: 'Ejecuta análisis CausalImpact (inferencia causal bayesiana con series temporales estructurales BSTS) de extremo a extremo, desde un Excel de datos hasta un informe HTML entregable al cliente. Usar para medir el efecto incremental de una intervención (pausa de campaña, cambio de puja, lanzamiento, cambio creativo) cuando no hay grupo de control aleatorizado, apoyándose en series de control no afectadas. Triggers: causal impact, impacto causal, efecto incremental, BSTS, contrafactual, qué habría pasado si, medir el efecto de una pausa o de un cambio de campaña.'
+---
+
 # CausalImpact Analyst
 
 Ejecuta análisis CausalImpact profesionales de extremo a extremo: desde cualquier Excel hasta un informe HTML entregable al cliente.
