@@ -6,14 +6,21 @@
 #
 # Que hace este script:
 #   1. Instala las skills custom en el plugin superpowers global
-#   2. Instala la configuracion MCP global (context7)
-#   3. Instala el proveedor NVIDIA NIM en la base de datos de Copilot
-#   4. Configura las API keys
+#   2. Instala las extensiones de agente en el scope de usuario
+#   3. Instala la configuracion MCP global (context7)
+#   4. Instala el proveedor NVIDIA NIM en la base de datos de Copilot
+#   5. Instala el script de generacion de imagenes
+#
+# Las skills y extensiones se descubren dinamicamente: cualquier carpeta
+# nueva en skills/ (con SKILL.md) o en extensions/ (con extension.mjs) se
+# instala sin tocar este script.
 # ============================================================
 
 param(
     [string]$NvidiaApiKey = "",
-    [string]$RepoRoot = (Split-Path $PSScriptRoot -Parent)
+    [string]$RepoRoot = (Split-Path $PSScriptRoot -Parent),
+    # Muestra que se instalaria sin escribir nada en disco.
+    [switch]$DryRun
 )
 
 $CopilotDir = "$env:USERPROFILE\.copilot"
@@ -39,45 +46,104 @@ if (-not (Test-Path $SuperpowersDir)) {
     exit 1
 }
 
+# --- Helper: instala un directorio de origen en destino ---
+# Devuelve $true si la instalacion se realizo (o se simulo con -DryRun).
+function Install-Bundle {
+    param(
+        [string]$Source,      # carpeta origen dentro del repo
+        [string]$Destination, # carpeta destino en ~/.copilot
+        [string]$Label        # nombre a mostrar
+    )
+
+    if ($DryRun) {
+        Write-Host "  [DRY] $Label"
+        return $true
+    }
+
+    # Se limpia el destino antes de copiar para que los ficheros eliminados
+    # en el repo no sobrevivan en la instalacion local.
+    if (Test-Path $Destination) {
+        Remove-Item $Destination -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    Copy-Item "$Source\*" $Destination -Recurse -Force
+    Write-Host "  [OK]  $Label"
+    return $true
+}
+
 # --- PASO 1: Instalar skills ---
-Write-Host "[1/4] Instalando skills custom..."
+Write-Host "[1/5] Instalando skills custom..."
 
 $SkillsSrc = "$RepoRoot\skills"
-$CustomSkills = @(
-    "data-scientist",
-    "data-analyst",
-    "causal-impact",
-    "ml-ops-engineer",
-    "runbook-generator",
-    "release-manager",
-    "accelerated-computing-cudf"
-)
+
+# Descubrimiento dinamico: se instala toda carpeta que contenga un SKILL.md.
+# Antes habia una lista fija de 7 nombres que dejaba fuera al resto del repo.
+$SkillDirs = @()
+if (Test-Path $SkillsSrc) {
+    $SkillDirs = Get-ChildItem $SkillsSrc -Directory |
+        Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') }
+}
 
 $installed = 0
-foreach ($skill in $CustomSkills) {
-    $src = "$SkillsSrc\$skill"
-    $dst = "$SuperpowersDir\$skill"
-    
-    if (Test-Path $src) {
-        New-Item -ItemType Directory -Path $dst -Force | Out-Null
-        Copy-Item "$src\*" $dst -Recurse -Force
-        Write-Host "  [OK] $skill"
+foreach ($skill in $SkillDirs) {
+    if (Install-Bundle -Source $skill.FullName `
+                       -Destination "$SuperpowersDir\$($skill.Name)" `
+                       -Label $skill.Name) {
         $installed++
-    } else {
-        Write-Host "  [!]  $skill (no encontrado en $src)"
     }
 }
-Write-Host "      $installed/$($CustomSkills.Count) skills instaladas"
 
-# --- PASO 2: Configurar MCP global ---
+if ($SkillDirs.Count -eq 0) {
+    Write-Host "  [!]  No se encontraron skills en $SkillsSrc"
+} else {
+    Write-Host "      $installed/$($SkillDirs.Count) skills instaladas"
+}
+
+# --- PASO 2: Instalar extensiones de agente ---
 Write-Host ""
-Write-Host "[2/4] Configurando MCP global (context7)..."
+Write-Host "[2/5] Instalando extensiones de agente..."
+
+$ExtSrc = "$RepoRoot\extensions"
+
+# Descubrimiento dinamico: toda carpeta con extension.mjs es una extension.
+# Instalarlas en el scope de usuario hace que esten disponibles en cualquier
+# repositorio, no solo en aquel donde vivan como extension de proyecto.
+$ExtDirs = @()
+if (Test-Path $ExtSrc) {
+    $ExtDirs = Get-ChildItem $ExtSrc -Directory |
+        Where-Object { Test-Path (Join-Path $_.FullName 'extension.mjs') }
+}
+
+if (-not $DryRun) {
+    New-Item -ItemType Directory -Path $ExtensionsDir -Force | Out-Null
+}
+
+$extInstalled = 0
+foreach ($ext in $ExtDirs) {
+    if (Install-Bundle -Source $ext.FullName `
+                       -Destination "$ExtensionsDir\$($ext.Name)" `
+                       -Label $ext.Name) {
+        $extInstalled++
+    }
+}
+
+if ($ExtDirs.Count -eq 0) {
+    Write-Host "  [!]  No se encontraron extensiones en $ExtSrc"
+} else {
+    Write-Host "      $extInstalled/$($ExtDirs.Count) extensiones instaladas"
+}
+
+# --- PASO 3: Configurar MCP global ---
+Write-Host ""
+Write-Host "[3/5] Configurando MCP global (context7)..."
 
 $McpSrc = "$RepoRoot\mcp\mcp.json"
 $McpDst = "$CopilotDir\mcp.json"
 
 if (Test-Path $McpSrc) {
-    if (Test-Path $McpDst) {
+    if ($DryRun) {
+        Write-Host "  [DRY] mcp.json"
+    } elseif (Test-Path $McpDst) {
         # Merge: leer ambos y combinar los servidores
         $existing = Get-Content $McpDst -Raw | ConvertFrom-Json
         $new = Get-Content $McpSrc -Raw | ConvertFrom-Json
@@ -96,12 +162,14 @@ if (Test-Path $McpSrc) {
     Write-Host "  [!]  mcp.json no encontrado en $McpSrc"
 }
 
-# --- PASO 3: Instalar proveedor NVIDIA NIM ---
+# --- PASO 4: Instalar proveedor NVIDIA NIM ---
 Write-Host ""
-Write-Host "[3/4] Configurando proveedor NVIDIA NIM..."
+Write-Host "[4/5] Configurando proveedor NVIDIA NIM..."
 
 $DbPath = "$CopilotDir\data.db"
-if (-not (Test-Path $DbPath)) {
+if ($DryRun) {
+    Write-Host "  [DRY] proveedor NVIDIA NIM"
+} elseif (-not (Test-Path $DbPath)) {
     Write-Host "  [!]  data.db no encontrado. Copilot debe abrirse al menos una vez."
 } else {
     # Usar el script Python para instalar el proveedor
@@ -117,46 +185,22 @@ if (-not (Test-Path $DbPath)) {
     }
 }
 
-# --- PASO 4: Instalar script nvidia_gen.py ---
+# --- PASO 5: Instalar script nvidia_gen.py ---
 Write-Host ""
-Write-Host "[4/4] Instalando script de generacion de imagenes..."
+Write-Host "[5/5] Instalando script de generacion de imagenes..."
 
 $ScriptSrc = "$RepoRoot\scripts\nvidia_gen.py"
 $ScriptDst = "$env:USERPROFILE\nvidia_gen.py"
 
-if (Test-Path $ScriptSrc) {
+if (-not (Test-Path $ScriptSrc)) {
+    Write-Host "  [!]  Script no encontrado: $ScriptSrc"
+} elseif ($DryRun) {
+    Write-Host "  [DRY] nvidia_gen.py"
+} else {
     Copy-Item $ScriptSrc $ScriptDst -Force
     Write-Host "  [OK] nvidia_gen.py instalado en $ScriptDst"
     Write-Host "       Uso: python $ScriptDst 'tu prompt aqui'"
-} else {
-    Write-Host "  [!]  Script no encontrado: $ScriptSrc"
 }
-
-# --- Resumen ---
-Write-Host ""
-Write-Host "[5/5] Instalando extensiones de agente (Meridian, CausalImpact)..."
-
-$ExtSrc = "$RepoRoot\extensions"
-$CustomExtensions = @(
-    "meridian-expert",
-    "causal-impact-expert"
-)
-
-New-Item -ItemType Directory -Path $ExtensionsDir -Force | Out-Null
-$extInstalled = 0
-foreach ($ext in $CustomExtensions) {
-    $src = "$ExtSrc\$ext"
-    $dst = "$ExtensionsDir\$ext"
-    if (Test-Path $src) {
-        New-Item -ItemType Directory -Path $dst -Force | Out-Null
-        Copy-Item "$src\*" $dst -Recurse -Force
-        Write-Host "  [OK] $ext"
-        $extInstalled++
-    } else {
-        Write-Host "  [!]  $ext (no encontrado en $src)"
-    }
-}
-Write-Host "      $extInstalled/$($CustomExtensions.Count) extensiones instaladas"
 
 # --- Resumen ---
 Write-Host ""
@@ -164,9 +208,17 @@ Write-Host "============================================"
 Write-Host " Instalacion completada"
 Write-Host "============================================"
 Write-Host ""
-Write-Host "SIGUIENTE PASO: Reinicia GitHub Copilot para"
-Write-Host "que cargue las nuevas skills, extensiones y configuracion."
+Write-Host "  Skills:      $installed"
+Write-Host "  Extensiones: $extInstalled"
 Write-Host ""
+if ($DryRun) {
+    Write-Host "MODO DRY-RUN: no se ha escrito nada en disco."
+    Write-Host ""
+} else {
+    Write-Host "SIGUIENTE PASO: Reinicia GitHub Copilot para"
+    Write-Host "que cargue las nuevas skills, extensiones y configuracion."
+    Write-Host ""
+}
 Write-Host "Comandos utiles:"
 Write-Host "  Generar imagen: python ~/nvidia_gen.py 'prompt'"
 Write-Host "  Ver modelos:    python ~/nvidia_gen.py --list-models"

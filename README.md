@@ -6,14 +6,22 @@ Repositorio de configuración personal de GitHub Copilot — skills, MCP servers
 
 ```
 copilot-config/
-├── skills/                     # Skills instaladas globalmente en Copilot
+├── skills/                     # Skills instaladas globalmente en Copilot (31)
+│   ├── meridian-geox/          # Meridian GeoX - diseno y analisis de geo-experimentos
+│   ├── meridian-mmm/           # Meridian MMM - media mix modeling bayesiano
+│   ├── causal-impact/          # Analisis de impacto causal
 │   ├── data-scientist/         # Agente data scientist con Python/pandas
 │   ├── data-analyst/           # Analista de datos exploratorio
-│   ├── causal-impact/          # Analisis de impacto causal
-│   ├── ml-ops-engineer/        # Ingenieria MLOps y despliegue de modelos
-│   ├── runbook-generator/      # Generador de runbooks operacionales
-│   ├── release-manager/        # Gestion de releases y changelogs
-│   └── accelerated-computing-cudf/  # NVIDIA cuDF - GPU DataFrames (oficial NVIDIA)
+│   ├── ga4-analyst/            # Analisis en Google Analytics 4
+│   ├── google-ads-analyst/     # Analisis en Google Ads
+│   ├── meta-ads-analyst/       # Analisis en Meta Ads
+│   ├── powerbi-*/              # Desarrollo y diseno de informes Power BI
+│   ├── sqldb-*/ sqldw-*/       # Autoria y consumo SQL Database / Warehouse
+│   └── ...                     # ver tabla completa mas abajo
+├── extensions/                 # Extensiones de agente (scope usuario)
+│   ├── meridian-expert/        # Herramientas MMM: workflow, scaffold, pitfalls
+│   ├── geox-expert/            # Herramientas GeoX: workflow, design builder, pitfalls
+│   └── causal-impact-expert/   # Herramientas CausalImpact: workflow, checklist
 ├── mcp/
 │   └── mcp.json                # Configuracion MCP global (context7)
 ├── scripts/
@@ -26,6 +34,23 @@ copilot-config/
     ├── skills-guide.md         # Guia de uso de skills
     └── model-catalog.md        # Catalogo de modelos NVIDIA
 ```
+
+## Que va aqui y que no
+
+Este repositorio es la **fuente unica** del conocimiento portable: skills, extensiones,
+configuracion MCP y modelos. Todo lo que contiene debe ser reutilizable con **cualquier
+cliente** y en **cualquier maquina**.
+
+| Va aqui | Va en el repo del cliente |
+|---------|---------------------------|
+| Skills y sus `references/` | Proyectos, datos y entregables |
+| Extensiones de agente | Informes generados |
+| Convenciones WPP (paleta, estilo de codigo) | Contexto de negocio del cliente |
+| Configuracion MCP y modelos | `.github/instructions/` (dependen de rutas del repo) |
+
+Los repositorios de cliente **consumen** este repo: no deben duplicar skills ni
+extensiones. Si necesitas corregir un error en una skill, se corrige aqui y se
+propaga con `install.ps1`.
 
 ## Instalacion rapida
 
@@ -47,28 +72,61 @@ cd copilot-config
 $dst = "$env:USERPROFILE\.copilot\plugins\superpowers\skills"
 Copy-Item skills\* $dst -Recurse -Force
 
-# 2. Instalar MCP global
+# 2. Copiar extensiones al scope de usuario
+$ext = "$env:USERPROFILE\.copilot\extensions"
+New-Item -ItemType Directory -Path $ext -Force
+Copy-Item extensions\* $ext -Recurse -Force
+
+# 3. Instalar MCP global
 Copy-Item mcp\mcp.json "$env:USERPROFILE\.copilot\mcp.json"
 
-# 3. Instalar proveedor NVIDIA NIM
+# 4. Instalar proveedor NVIDIA NIM
 python setup\install-nvidia-provider.py --api-key "nvapi-TU_KEY"
 
-# 4. Reiniciar Copilot
+# 5. Reiniciar Copilot
 ```
+
+> Para ver que se instalaria sin escribir nada en disco: `.\setup\install.ps1 -DryRun`
+
+Las skills y extensiones se descubren **dinamicamente**: cualquier carpeta nueva en
+`skills/` que contenga un `SKILL.md`, o en `extensions/` que contenga un
+`extension.mjs`, se instala sin tener que tocar el instalador.
 
 ## Skills disponibles
 
-| Skill | Descripcion | Origen |
-|-------|-------------|--------|
-| `data-scientist` | Analisis exploratorio, ML, visualizacion con Python | Proyecto WPPOpen |
-| `data-analyst` | SQL, pandas, dashboards, reportes de negocio | Proyecto WPPOpen |
-| `causal-impact` | Analisis causal, A/B testing, diferencias en diferencias | Proyecto WPPOpen |
-| `ml-ops-engineer` | Pipelines ML, Docker, CI/CD para modelos | Proyecto WPPOpen |
-| `runbook-generator` | Documentacion operacional automatica | Proyecto WPPOpen |
-| `release-manager` | Versioning, changelogs, release notes | Proyecto WPPOpen |
-| `accelerated-computing-cudf` | GPU DataFrames con NVIDIA cuDF | NVIDIA Oficial |
+Las skills se descubren automaticamente. Las principales del area de analytics:
+
+| Skill | Descripcion |
+|-------|-------------|
+| `meridian-geox` | Diseno y analisis de geo-experimentos con Meridian GeoX |
+| `meridian-mmm` | Media mix modeling bayesiano con Google Meridian |
+| `causal-impact` | Analisis causal, A/B testing, diferencias en diferencias |
+| `data-scientist` | Analisis exploratorio, ML, visualizacion con Python |
+| `data-analyst` | SQL, pandas, dashboards, reportes de negocio |
+| `ga4-analyst` | Analisis en Google Analytics 4 |
+| `google-ads-analyst` | Analisis y activacion en Google Ads |
+| `meta-ads-analyst` | Analisis en Meta Ads |
+| `marketing-attribution` | Modelos de atribucion de marketing |
+| `client-reporting` | Generacion de informes de cliente |
+| `ml-ops-engineer` | Pipelines ML, Docker, CI/CD para modelos |
+| `powerbi-developer` | Desarrollo de modelos e informes Power BI |
+| `sqldb-*` / `sqldw-*` | Autoria y consumo SQL Database / Warehouse |
+| `runbook-generator` | Documentacion operacional automatica |
+| `release-manager` | Versioning, changelogs, release notes |
+| `accelerated-computing-cudf` | GPU DataFrames con NVIDIA cuDF |
 
 Para activar una skill en Copilot escribe `/skill nombre-de-la-skill` en cualquier chat.
+
+## Extensiones de agente
+
+Se instalan en `~/.copilot/extensions/`, por lo que estan disponibles en **todos** los
+repositorios, no solo en aquel donde se desarrollaron.
+
+| Extension | Herramientas que aporta |
+|-----------|-------------------------|
+| `geox-expert` | Workflow GeoX, constructor de `DesignConfig`, trampas de API, scaffold de proyecto |
+| `meridian-expert` | Workflow MMM, scaffold de proyecto, trampas de API |
+| `causal-impact-expert` | Workflow CausalImpact, lecciones aprendidas, checklist |
 
 ## Modelos NVIDIA NIM configurados
 
@@ -122,9 +180,12 @@ Modelos de imagen soportados:
 ## Notas tecnicas
 
 - Las skills se cargan desde `~/.copilot/plugins/superpowers/skills/`
+- Las extensiones se cargan desde `~/.copilot/extensions/` (scope usuario, todos los repos)
 - El MCP global se lee desde `~/.copilot/mcp.json`
 - Los proveedores de modelos se almacenan en `~/.copilot/data.db` (SQLite)
 - El plugin `superpowers` debe estar instalado (viene por defecto en Copilot v1.0+)
+- El instalador **borra y recrea** cada carpeta destino, de forma que los ficheros
+  eliminados en el repo no sobreviven en la instalacion local
 
 ## Ver documentacion completa
 
