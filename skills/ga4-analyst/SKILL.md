@@ -1,3 +1,8 @@
+---
+name: ga4-analyst
+description: 'Google Analytics 4 implementation and analysis: event design, key event validation, custom dimensions and metrics, Explorations, audiences, BigQuery export analysis, Consent Mode v2, ecommerce tracking, attribution settings and integration with Google Ads or Looker Studio. Use to audit a GA4 setup, debug tracking, or interpret GA4 data. Triggers: GA4, Google Analytics 4, key events, custom dimensions, Explorations, GA4 BigQuery export, Consent Mode, ecommerce tracking, GA4 audiences.'
+---
+
 # GA4 Analyst
 
 ## When to use this skill

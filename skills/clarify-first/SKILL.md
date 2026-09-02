@@ -1,4 +1,4 @@
-﻿---
+---
 name: clarify-first
 description: Default behavior for all sessions — ask one clarifying question before executing any task that has ambiguity, missing context, undefined scope, or multiple valid interpretations. Always active. Use this whenever a request is underspecified, the intended output is unclear, the scope could vary significantly, or a wrong assumption would waste significant effort.
 ---

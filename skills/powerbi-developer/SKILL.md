@@ -1,3 +1,8 @@
+---
+name: powerbi-developer
+description: 'Power BI data modelling and development: star schema design, DAX measures, Power Query and query folding, performance tuning, semantic modelling, row-level security, Import versus DirectQuery versus Direct Lake, incremental refresh, REST API automation and Fabric integration, focused on client-ready marketing dashboards. Triggers: Power BI, DAX, Power Query, star schema, row-level security, DirectQuery, Direct Lake, incremental refresh, slow report, filter context.'
+---
+
 # Power BI Developer
 
 ## When to use this skill

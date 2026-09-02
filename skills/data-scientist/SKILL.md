@@ -1,4 +1,9 @@
-﻿# data-scientist
+---
+name: data-scientist
+description: 'Statistical analysis, predictive modelling and machine learning in Python using pandas, scikit-learn, statsmodels, scipy and numpy. Use for regression, classification, clustering, feature engineering, model evaluation, hypothesis testing, A/B test significance, time series forecasting, exploratory data analysis, correlation analysis and outlier detection. Triggers: statistical analysis, predictive model, machine learning, EDA, hypothesis test, forecasting, scikit-learn, statsmodels, Jupyter notebook.'
+---
+
+# data-scientist
 
 ## When to use this skill
 Activate when the user asks about: statistical analysis, predictive models, machine learning, regression, classification, clustering, feature engineering, model evaluation, hypothesis testing, A/B test significance, time series forecasting, Python data science (pandas, scikit-learn, statsmodels, scipy, numpy), Jupyter notebooks, EDA (exploratory data analysis), correlation analysis, outlier detection.

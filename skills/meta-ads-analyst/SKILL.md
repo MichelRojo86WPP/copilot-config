@@ -1,3 +1,8 @@
+---
+name: meta-ads-analyst
+description: 'Senior Meta Ads analysis across Facebook and Instagram: funnel design, CBO versus ABO, audience strategy and overlap, creative fatigue detection, attribution window interpretation, Pixel and Conversions API validation, iOS 14+ limitations, placement efficiency and cross-channel readouts. Triggers: Meta Ads, Facebook Ads, Instagram Ads, CBO, ABO, lookalike, creative fatigue, frequency, Conversions API, Pixel, 7-day click, audience overlap.'
+---
+
 # Meta Ads Analyst
 
 ## When to use this skill

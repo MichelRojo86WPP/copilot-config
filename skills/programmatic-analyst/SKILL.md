@@ -1,3 +1,8 @@
+---
+name: programmatic-analyst
+description: 'Programmatic media analysis across DV360, The Trade Desk and Amazon DSP: campaign hierarchy reviews, deal strategy across open auction, PMP, preferred deals and programmatic guaranteed, audience activation, brand safety, viewability, pacing, invalid traffic and fraud analysis, frequency capping, Floodlight setup and cross-platform reporting. Triggers: programmatic, DV360, The Trade Desk, Amazon DSP, PMP, viewability, IVT, brand safety, frequency capping, Floodlight.'
+---
+
 # Programmatic Analyst
 
 ## When to use this skill

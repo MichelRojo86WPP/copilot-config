@@ -1,3 +1,8 @@
+---
+name: google-ads-analyst
+description: 'Senior-level Google Ads analysis and optimization: GAQL queries, account structure reviews, bidding diagnosis, budget pacing, search term mining, Quality Score review, Auction Insights interpretation, and integration across Google Ads, GA4 and BigQuery. Covers Search, Performance Max, Display, YouTube and Shopping. Triggers: Google Ads, GAQL, Performance Max, target CPA, target ROAS, impression share, search terms, auction insights, account audit, bidding strategy.'
+---
+
 # Google Ads Analyst
 
 ## When to use this skill

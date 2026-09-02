@@ -1,4 +1,9 @@
-﻿# marketing-attribution
+---
+name: marketing-attribution
+description: 'Attribution and incrementality measurement: attribution models, marketing mix modelling (MMM), multi-touch attribution (MTA), incrementality testing, conversion lift, holdout tests, Shapley values, Robyn, LightweightMMM, iROAS, UTM governance, walled garden discrepancies and difference-in-differences. Use to decide which measurement approach answers the question at hand, credit assignment versus true incremental impact. Triggers: attribution model, MMM, MTA, incrementality, conversion lift, holdout, iROAS, incremental ROAS, causal inference for marketing.'
+---
+
+# marketing-attribution
 
 ## When to use this skill
 Activate when the user asks about: attribution models, marketing mix modeling (MMM), multi-touch attribution (MTA), incrementality testing, conversion lift, holdout tests, Shapley values, Robyn, LightweightMMM, iROAS, UTM governance, walled garden measurement, view-through vs click-through attribution, budget optimization by channel, causal inference for marketing, difference-in-differences.

@@ -1,4 +1,9 @@
-﻿# sql-marketing
+---
+name: sql-marketing
+description: 'SQL for marketing and media data, optimized for BigQuery by default and also Snowflake and PostgreSQL: cohort analysis, LTV, CAC, ROAS, attribution and funnel queries, GA4 BigQuery export, campaign performance, customer journey, window functions and dbt models. Use when the deliverable is a query or a warehouse model. Triggers: SQL, BigQuery, Snowflake, cohort analysis, GA4 BigQuery export, window functions, dbt, attribution query, funnel query.'
+---
+
+# sql-marketing
 
 ## When to use this skill
 Activate when the user asks about: SQL queries for marketing data, BigQuery, Snowflake, PostgreSQL, cohort analysis, LTV, CAC, ROAS in SQL, attribution queries, funnel queries, GA4 BigQuery export, campaign performance SQL, customer journey SQL, window functions for marketing, dbt models, data warehouse marketing patterns.
