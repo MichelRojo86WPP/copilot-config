@@ -153,6 +153,29 @@ Ver patrones listos para copiar en
 Cada iteración se documenta: fecha, síntoma observado, hipótesis, cambio aplicado.
 Nunca sobrescribas el script anterior — el valor está en la trazabilidad.
 
+Disciplina de iteración:
+
+- **Un cambio por iteración.** Si tocas pesos, valor de checkout y segmentación a la vez,
+  no sabrás qué funcionó.
+- **Espera al menos una semana** entre cambios: el modelo necesita reaprender.
+  Cambiar constantes a diario garantiza que nunca salga del periodo de aprendizaje.
+- El "panel de control de pesos" hace que el diff entre iteraciones sea legible.
+
+### Convenciones de estilo recomendadas
+
+Estas convenciones vienen de scripts en producción y valen la pena por lo mismo que
+en cualquier código: el script lo va a heredar otra persona.
+
+- Prefijo `_` en **todas** las variables, para distinguirlas de las señales de DV360.
+- `_MAYUSCULAS` para constantes (IDs, conjuntos, pesos globales);
+  `_minusculas` para lo derivado dentro de la lógica.
+- Sufijos consistentes: `_id`, `_count`, `_value`, `_weight`, `_val`, y `_has_` / `_is_`
+  para booleanos.
+- Cabeceras de bloque numeradas y delimitadas (`# --- 2. EXTRACCIÓN DE DATOS ---`)
+  para poder navegar un script largo.
+- Un único `return` por rama, siempre con una función de agregación.
+  Evita cascadas de `if/else` dentro del `return`.
+
 ---
 
 ## Diagnóstico de problemas frecuentes
@@ -162,7 +185,7 @@ Nunca sobrescribas el script anterior — el valor está en la trazabilidad.
 | **Underdelivery** / el IO no gasta | Muy pocas impresiones con score > 0; el modelo no encuentra inventario que cumpla | Añadir micro-conversiones, subir el suelo de score, revisar el bloque fallback |
 | **Data sparsity** — el modelo no entrena | Menos conversiones de las que exigen los [requisitos de datos](https://support.google.com/displayvideo/answer/9723477) | Inyectar una señal intermedia (checkout, form) con valor fijo pequeño |
 | **% de errores de ejecución > 0** | `None` sin guarda antes de `float()`, `str()` o una comparación | Añadir `if x == None:` para cada llamada a `conversion_*` |
-| El script puntúa 0 siempre | El Floodlight **no está asignado** a los Line Items que usan el algoritmo | Asignar la conversión en *tracked conversions* de cada LI |
+| El script puntúa 0 siempre | El Floodlight **no está asignado** a los Line Items que usan el algoritmo | Asignar la conversión en *tracked conversions* de cada LI. Es el error operativo más repetido. |
 | Puntúa conversiones que no son de esta campaña | Píxel global de Floodlight que dispara en todo el site | Segmentar por `conversion_custom_variable` (p. ej. ID de producto) en lugar de por el conteo global |
 | Una conversión cara domina el entrenamiento | Cola larga de revenue | Escalonar por tramos (tROAS "aplanado") o `log(_value)` |
 | Empeora al asignarlo a campañas ajenas | No hay rama por defecto | Añadir siempre un **bloque fallback** con peso bajo |

@@ -192,6 +192,14 @@ else:
 El peso del fallback es bajo (p. ej. `0.2`) y **no** puntúa micro-conversiones:
 la rama por defecto debe ser conservadora.
 
+Variante aún más estricta, cuando prefieres que una campaña no contemplada quede
+completamente fuera del entrenamiento:
+
+```python
+else:
+    return 0
+```
+
 ---
 
 ## P8 · Segmentación por u-variable (ID de producto)
@@ -252,9 +260,17 @@ Reglas de calibración:
 
 - El valor del checkout debe ser **órdenes de magnitud menor** que el de una venta.
   Si se sobrevalora, el modelo optimiza a micro-conversiones y el ROAS se hunde.
+- Punto de partida razonable: ~2% del valor medio de pedido. **Es solo un arranque**:
+  en la práctica ese valor suele acabar siendo mucho más bajo tras las primeras semanas.
+  Revisa la distribución de scores del test y baja el valor si el checkout compite con la venta.
 - Segmenta el valor del checkout igual que la venta, si no el píxel global mete ruido.
+- Decide si el peso va **incorporado** en la constante (`_chk_prio = 100`, valores finales) o
+  se aplica aparte (`_chk_base * _chk_weight`). Ambas valen, pero mézclalas y acabarás
+  aplicando el peso dos veces sin darte cuenta. Elige una y documéntala.
 - Requiere que el **Floodlight de checkout esté asignado a los Line Items**; si no,
   `total_conversion_count` devuelve 0 y la señal no existe.
+- En ese Floodlight secundario, desmarca **Include in Conversions**: debe alimentar el
+  script, no contaminar el reporting de conversiones de negocio.
 
 ---
 
