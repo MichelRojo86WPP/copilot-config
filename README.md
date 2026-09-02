@@ -28,12 +28,30 @@ copilot-config/
 │   └── nvidia_gen.py           # Generador de imagenes/video con IA (multi-proveedor)
 ├── setup/
 │   ├── install.ps1             # Instalador automatico (Windows PowerShell)
+│   ├── switch-profile.ps1      # Perfiles de plugins para reducir consumo de tokens
 │   └── install-nvidia-provider.py  # Instala NVIDIA NIM en Copilot DB
 └── docs/
     ├── nvidia-nim-setup.md     # Guia NVIDIA NIM
     ├── skills-guide.md         # Guia de uso de skills
+    ├── token-optimization.md   # Como reducir el consumo de cuota
     └── model-catalog.md        # Catalogo de modelos NVIDIA
 ```
+
+## Consumo de tokens
+
+Los plugins activos inyectan las definiciones de sus herramientas en **cada**
+llamada al modelo, se usen o no: medido, unos **41.000 tokens fijos por
+llamada** con los 9 plugins activos, en torno al **25%** del gasto de entrada
+cuando se trabaja en analitica.
+
+```powershell
+.\setup\switch-profile.ps1 status      # ver coste actual
+.\setup\switch-profile.ps1 analytics   # perfil recomendado para analitica
+```
+
+Las skills y las extensiones **no** son plugins y siguen disponibles en todos
+los perfiles. Detalle completo y las otras dos palancas (una sesion por tarea,
+modelo segun la tarea) en [`docs/token-optimization.md`](docs/token-optimization.md).
 
 ## Que va aqui y que no
 
