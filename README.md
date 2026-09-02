@@ -40,18 +40,20 @@ copilot-config/
 ## Consumo de tokens
 
 Los plugins activos inyectan las definiciones de sus herramientas en **cada**
-llamada al modelo, se usen o no: medido, unos **41.000 tokens fijos por
-llamada** con los 9 plugins activos, en torno al **25%** del gasto de entrada
-cuando se trabaja en analitica.
+llamada al modelo, se usen o no. Prueba A/B con el mismo prompt trivial y
+sesion nueva: **95,2k tokens y 23,81 creditos** con los 9 plugins activos
+frente a **32,5k y 8,14 creditos** sin ninguno. Un **66% menos**.
 
 ```powershell
 .\setup\switch-profile.ps1 status      # ver coste actual
 .\setup\switch-profile.ps1 analytics   # perfil recomendado para analitica
+copilot plugin list                    # verificar: deben salir [disabled]
 ```
 
 Las skills y las extensiones **no** son plugins y siguen disponibles en todos
-los perfiles. Detalle completo y las otras dos palancas (una sesion por tarea,
-modelo segun la tarea) en [`docs/token-optimization.md`](docs/token-optimization.md).
+los perfiles. El cambio solo afecta a **sesiones nuevas**. Detalle completo y
+las otras dos palancas (una sesion por tarea, modelo segun la tarea) en
+[`docs/token-optimization.md`](docs/token-optimization.md).
 
 ## Que va aqui y que no
 
