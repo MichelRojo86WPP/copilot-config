@@ -16,7 +16,7 @@ de WPP Media para Meliá Hotels International.
 ### Ubicación del código Meridian
 - Librería base: \`analysis/media-mix/meridian/\` (copia de google/meridian, commit 11f597d)
 - Proyectos MMM: \`projects/media-mix/<cliente>-<año>/\`
-- Documentación: \`docs/setup/google-meridian-knowledge.md\`
+- Documentación: skill \`meridian-mmm\` (\`skills/meridian-mmm/SKILL.md\` + \`skills/meridian-mmm/references/\`)
 - Notebook referencia: \`analysis/media-mix/meridian/demo/Meridian_Getting_Started.ipynb\`
 
 ### Imports correctos de Meridian (API real)
