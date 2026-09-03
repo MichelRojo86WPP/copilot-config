@@ -139,6 +139,11 @@ Ver patrones listos para copiar en
     o con tramos escalonados.
 - Descarga el `.csv` para inspeccionar impresiones individuales.
 
+> 🔌 **¿Publicar por API en vez de a mano?** El flujo (`uploadScript` → `media.upload` →
+> `scripts.create`), la validación programática vía `errors[]` y la limitación que impide
+> republicar sobre un algoritmo ya asignado a line items están en
+> [`references/syntax-reference.md` § 8](references/syntax-reference.md#8-publicación-por-api).
+
 ### 4. Activar y medir
 
 - Procesado del script: ~20 min. Entrenamiento del modelo: **1–3 días**.
@@ -215,6 +220,7 @@ en cualquier código: el script lo va a heredar otra persona.
 - [Custom bidding data requirements](https://support.google.com/displayvideo/answer/9723477)
 - [A/B experiments en DV360](https://support.google.com/displayvideo/answer/9040669)
 - [DV360 API](https://developers.google.com/display-video/api/reference/rest)
+- [Referencia del recurso `customBiddingAlgorithms.scripts`](https://developers.google.com/display-video/api/reference/rest/v4/customBiddingAlgorithms.scripts)
 
 ## Skills relacionadas
 

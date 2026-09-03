@@ -362,3 +362,64 @@ dentro de una función de agregación.
   por defecto es 90 días y sigue siendo editable.
 - El conteo de conversiones sigue el tipo de scoring: si el script solo usa post-click,
   el tracked conversion será "Post click only"; si considera post-view, será "All Conversions".
+
+---
+
+## 8. Publicación por API
+
+Alternativa programática a los pasos 1–3 del ciclo de vida manual. Es el mecanismo que usan
+las soluciones que generan scripts desde una fuente de datos (BigQuery, hojas de cálculo).
+
+Verificado contra la documentación del cliente oficial `displayvideo_v4`
+(`googleapis/google-api-python-client`). Disponible de v1 a v4.
+
+### 8.1 Publicar un script son tres llamadas
+
+| # | Llamada | Resultado |
+|---|---|---|
+| 1 | `customBiddingAlgorithms.uploadScript` | Devuelve un `resourceName` con formato `customBiddingAlgorithms/{id}/scriptRef/{ref_id}` |
+| 2 | `media.upload` | Sube el fichero del script a esa ruta |
+| 3 | `customBiddingAlgorithms.scripts.create` | Crea el objeto script referenciando ese `scriptRef` |
+
+Requiere `advertiserId` o `partnerId`. Solo el partner propietario tiene acceso de escritura.
+
+### 8.2 Validación programática — equivalente a *Check syntax*
+
+El recurso `CustomBiddingScript` devuelve:
+
+- `state` — estado del script. Vale `REJECTED` si no valida.
+- `errors[]` — solo cuando `state` es `REJECTED`. Cada entrada trae **`line`, `column`,
+  `errorCode` y `errorMessage`**.
+- `active` — si el script se está usando ahora mismo para puntuar.
+
+Permite un ciclo automático de publicar → leer el error en la línea exacta → corregir →
+reintentar, sin pasar por la interfaz.
+
+### 8.3 ⚠️ Limitación que condiciona cualquier automatización
+
+Literal de la documentación de `scripts.create`:
+
+> *"Requests creating a custom bidding script under an algorithm assigned to a line item
+> will return an error."*
+
+**No se puede crear un script bajo un algoritmo que ya está asignado a line items.** La API
+sirve para **crear e iterar algoritmos nuevos**, no para reescribir en caliente el script de
+un algoritmo en producción.
+
+Cualquier diseño de automatización continua tiene que resolver esto primero — probablemente
+gestionando también el ciclo de vida de los line items, no solo el del script.
+
+### 8.4 Prerrequisitos de acceso
+
+- Proyecto de GCP con la Display & Video 360 API habilitada.
+- Cuenta de servicio con acceso al *advertiser* o *partner*.
+- Credenciales accesibles desde el entorno de ejecución.
+- Librería cliente (`google-api-python-client` u otra equivalente).
+
+> ⚠️ **Antes de automatizar la escritura.** Un script mal calibrado tarda hasta 24 h en
+> estabilizarse y afecta a gasto real. Empieza siempre por operaciones de **solo lectura**
+> (`scripts.list`, `scripts.get`, `media.download`) para contrastar qué está corriendo de
+> verdad, y deja la publicación como paso deliberado y revisado.
+
+> 📌 Este flujo está verificado contra la documentación del cliente oficial, **no contra una
+> cuenta viva**. Confírmalo antes de construir sobre él.
