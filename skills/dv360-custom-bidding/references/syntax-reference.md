@@ -225,15 +225,20 @@ Todas aceptan un **Attribution Model ID**; usa `0` para last-touch por defecto.
 #### Prerrequisito: compartir las u-variables con DV360
 
 `conversion_custom_variable` **no funciona** hasta que la u-variable se comparte
-explícitamente. Es un paso de configuración en la UI, no algo que se resuelva en el script:
+explícitamente con Display & Video 360. Es un paso de configuración en
+**Campaign Manager 360**, no algo que se resuelva en el script:
 
-1. *Resources › Floodlight Group*.
-2. Selecciona la **Floodlight activity**.
-3. En **Custom Floodlight variables**, pulsa el icono de **ver**.
-4. Marca la casilla de la u-variable que quieras usar.
+1. En CM360: *Admin › Floodlight configuration › Custom Floodlight variables*.
+2. Localiza la u-variable (`u1`, `u2`, … `u6`).
+3. Marca el **icono del ojo** (visibilidad) para compartirla con DV360.
+4. Asegúrate de que el advertiser de DV360 está mapeado al **Floodlight group** correcto.
+
+Una vez compartida, la variable aparece seleccionable en *Script tools › U-Variables*
+dentro del editor de scripts de DV360.
 
 Si se salta este paso la función devuelve `None` para todas las impresiones y el script
-puntúa mal **en silencio**, sin error de ejecución.
+puntúa mal **en silencio**, sin error de ejecución. Si no ves el icono del ojo o la
+variable no aparece en DV360, revisa tus permisos en CM360 y el mapeo del Floodlight group.
 
 > `total_conversion_value` solo devuelve revenue en actividades con Floodlight de tipo
 > **Sales**. En un Floodlight de tipo *Counter* devolverá 0.
