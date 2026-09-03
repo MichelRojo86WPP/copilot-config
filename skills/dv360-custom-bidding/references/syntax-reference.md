@@ -159,7 +159,7 @@ Cómo elegir:
 | `browser_timezone_offset_minutes` | Integer | Minutos entre la zona del navegador y GMT-12 (1320 = GMT+10). |
 | `device_type` | Integer | 0 desktop, 1 unknown, 2 smartphone, 3 tablet, 4 smart TV, 5 connected TV, 6 set top box, 7 connected device. |
 | `environment` | Integer | 10 web optimizada, 11 web no optimizada, 12 app. |
-| `isp_reportable_isp` | Integer | ID de ISP. |
+| `isp_reportable_id` | Integer | ID de ISP. ⚠️ Ver nota de errata más abajo. |
 | `language` | String | Idioma del navegador. |
 | `mobile_make_reportable_id` | Integer | Fabricante del móvil. |
 | `mobile_model_reportable_id` | Integer | Modelo del móvil. |
@@ -167,8 +167,20 @@ Cómo elegir:
 | `operating_system_reportable_id` | Integer | Sistema operativo. |
 
 > ⚠️ **Migración Q3 2025.** `browser_id`, `isp_id`, `mobile_make_id`, `mobile_model_id` y
-> `operating_system_id` están **descatalogados**. Usa siempre las variantes
-> `*_reportable_id`. Los scripts antiguos siguen funcionando temporalmente pero deben migrarse.
+> `operating_system_id` **ya no están soportados**. La documentación oficial es ambigua: las
+> notas por señal dicen que los scripts antiguos "seguirán soportados durante un tiempo",
+> pero la nota final del apartado afirma que esos nombres *no longer supported* y obliga a
+> migrar. Trátalo como ruptura: usa siempre las variantes `*_reportable_id`.
+> El cambio alinea los espacios de IDs con SDF, la API y Data Transfer v2.
+
+> 🐛 **Errata en la documentación de Google.** En la tabla de señales, el ID de ISP aparece
+> como `isp_reportable_isp`, pero las dos notas de migración de la misma página lo llaman
+> `isp_reportable_id`. Dos de tres menciones —y el patrón de nombres del resto de señales—
+> apuntan a `isp_reportable_id`. Úsalo y confírmalo con **Check syntax** antes de guardar.
+
+> Los IDs concretos de navegador, ISP, fabricante, modelo y sistema operativo se descargan
+> desde la *custom bidding ID sheet* (`.xlsx`) enlazada en la
+> [referencia oficial](https://support.google.com/displayvideo/answer/11967043).
 
 ### 5.5 Inventario y contexto
 
@@ -285,6 +297,7 @@ Esta es la fuente número uno de errores. El script parece Python, pero:
   - swap: `_a, _b = _b, _a`
   - encadenada: `_a = _b = 2`
   - aumentada: `_idx += 1`
+  - anotada: `_a: int = 1`
 
 **Keywords prohibidas**
 
