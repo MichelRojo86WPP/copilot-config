@@ -331,9 +331,175 @@ return max_aggregate([
 
 ---
 
-## Plantilla completa
+## P13 · U-variable numérica como score directo
 
-Punto de partida para un script nuevo. Sustituye IDs y pesos.
+**Cuándo:** la u-variable no es un identificador sino una **magnitud de negocio**
+(noches reservadas, unidades, pasajeros, duración del contrato) y esa magnitud *es* el
+valor que quieres maximizar.
+
+```python
+_uvar = conversion_custom_variable(_FL_ID, 0, _UVAR_IDX)
+
+if _uvar != None and _uvar != "":
+    return float(_uvar)
+return 0
+```
+
+Dos guardas, no una: `conversion_custom_variable` devuelve `None` si no hubo conversión,
+pero devuelve **string vacío** si la conversión existe y la variable no venía informada.
+`float("")` revienta igual que `float(None)`.
+
+Toda impresión sin conversión —y toda impresión que el modelo de atribución no acredite—
+vale 0.
+
+---
+
+## P14 · Ponderar clic frente a post-view
+
+**Cuándo:** una conversión post-clic y una post-view no valen lo mismo, y quieres que el
+modelo lo sepa en lugar de tratarlas como el mismo evento.
+
+```python
+return sum_aggregate([
+    ([click,     total_conversion_count(_FL_ID, 0) > 0], _weight_ct),
+    ([not click, total_conversion_count(_FL_ID, 0) > 0], _weight_vt)
+])
+```
+
+Las dos condiciones son mutuamente excluyentes, así que `sum_aggregate` y `max_aggregate`
+dan el mismo resultado. Se usa `sum_aggregate` por convención de la documentación oficial.
+
+Variante para valorar el clic por sí mismo como señal intermedia cuando faltan
+conversiones:
+
+```python
+return max_aggregate([
+    ([click],                                    _weight_click),
+    ([total_conversion_count(_FL_ID, 0) > 0],    _weight_conv)
+])
+```
+
+---
+
+## P15 · Conversiones ponderadas multi-Floodlight
+
+**Cuándo:** hay varias actividades de conversión que valen cosas distintas, y quieres que
+el score refleje la **suma** de todo lo que hizo el usuario.
+
+```python
+return sum_aggregate([
+    ([total_conversion_count(_FL_ID_1, 0) > 0], total_conversion_count(_FL_ID_1, 0) * _w1),
+    ([total_conversion_count(_FL_ID_2, 0) > 0], total_conversion_count(_FL_ID_2, 0) * _w2),
+    ([total_conversion_count(_FL_ID_3, 0) > 0], total_conversion_count(_FL_ID_3, 0) * _w3)
+])
+```
+
+Comportamiento de `sum_aggregate` aquí:
+
+- Si una impresión lleva a **conversiones de actividades distintas**, los valores se **suman**.
+- Si lleva a **varias conversiones de la misma actividad**, se suma el conteo y luego se
+  multiplica por el peso.
+
+Casos de uso típicos:
+
+- Un fabricante de coches con páginas de producto por gama (monovolumen, SUV, berlina),
+  cada una con un valor distinto.
+- Una ONG cuyo evento de donación es raro: añade actividades de *upper funnel* con pesos
+  bajos para generar volumen de señal sin dejar de priorizar la donación.
+
+**Elegir el agregador según la intención:**
+
+| Quieres… | Agregador |
+|---|---|
+| Acumular todo lo que hizo el usuario | `sum_aggregate` |
+| Quedarte con el evento de mayor valor | `max_aggregate` |
+| Quedarte con el primero que case, por orden del script | `first_match_aggregate` |
+
+> ⚠️ `sum_aggregate` sobre condiciones **solapables** infla el score y desbalancea el
+> modelo. Úsalo solo cuando la acumulación sea intencionada.
+
+---
+
+## P16 · Conversiones ponderadas de GA4
+
+**Cuándo:** el cliente mide en GA4 y no en Floodlight, o quiere usar eventos de embudo
+que solo existen en GA4.
+
+Recuerda los prerrequisitos (vinculación GA↔DV360, evento creado, volumen suficiente):
+ver `references/syntax-reference.md` § 5.9.
+
+Ponderar tipos de conversión por valor de negocio:
+
+```python
+return sum_aggregate([
+    ([ga4_conversions_count(123, "one_time_purchase") > 0],  1),
+    ([ga4_conversions_count(124, "newsletter_signup")  > 0],  2),
+    ([ga4_conversions_count(125, "subscription")       > 0], 10)
+])
+```
+
+Priorizar la etapa más profunda del embudo alcanzada:
+
+```python
+return max_aggregate([
+    ([ga4_conversions_count(123, "landing_page")        > 0], 1),
+    ([ga4_conversions_count(124, "application_start")   > 0], 5),
+    ([ga4_conversions_count(125, "application_summary") > 0], 7),
+    ([ga4_conversions_count(126, "application_complete")> 0], 9)
+])
+```
+
+tROAS directo sobre el valor de transacción de GA4:
+
+```python
+return ga4_conversions_total_value(_PROPERTY_ID, "purchase")
+```
+
+---
+
+## P17 · Dayparting y formato en campañas de branding
+
+**Cuándo:** campañas de marca, CTV o audio donde no hay conversión que optimizar y la
+señal útil es *cuándo* y *cómo* se ve el anuncio.
+
+Por franja horaria (útil en CTV, donde el consumo se concentra en ciertas horas):
+
+```python
+return max_aggregate([
+    ([0  <= hour_of_day < 7],   _score_a),
+    ([7  <= hour_of_day < 9],   _score_b),
+    ([9  <= hour_of_day < 18],  _score_c),
+    ([18 <= hour_of_day < 22],  _score_b),
+    ([22 <= hour_of_day <= 23], _score_a)
+])
+```
+
+> ⚠️ En **CTV** el scoring basado en `domain` **no está soportado**. Usa `site_id`,
+> `app_id` o señales temporales.
+
+Combinando tiempo en pantalla con un formato concreto:
+
+```python
+return max_aggregate([
+    ([time_on_screen_seconds > 10, creative_width == 300, creative_height == 600], _score_x),
+    ([time_on_screen_seconds >= 3, time_on_screen_seconds <= 10,
+      creative_width == 300, creative_height == 600],                              _score_y),
+    ([time_on_screen_seconds < 3,  creative_width == 300, creative_height == 600], _score_z)
+])
+```
+
+Audio — maximizar escuchas completas:
+
+```python
+return max_aggregate([
+    ([audio_completed], _score_a)
+])
+```
+
+`audio_completed` se registra **una sola vez por impresión**, aunque el usuario reinicie
+el clip, y cuenta como completado aunque salte partes, siempre que llegue al final.
+
+---
 
 ```python
 # [CLIENTE] [MERCADO] - [OBJETIVO] (Iteración N)

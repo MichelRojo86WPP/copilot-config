@@ -222,7 +222,36 @@ Todas aceptan un **Attribution Model ID**; usa `0` para last-touch por defecto.
 
 > Todas estas funciones pueden devolver `None`. **Siempre** protégelas con una guarda antes de operar.
 
+#### Prerrequisito: compartir las u-variables con DV360
+
+`conversion_custom_variable` **no funciona** hasta que la u-variable se comparte
+explícitamente. Es un paso de configuración en la UI, no algo que se resuelva en el script:
+
+1. *Resources › Floodlight Group*.
+2. Selecciona la **Floodlight activity**.
+3. En **Custom Floodlight variables**, pulsa el icono de **ver**.
+4. Marca la casilla de la u-variable que quieras usar.
+
+Si se salta este paso la función devuelve `None` para todas las impresiones y el script
+puntúa mal **en silencio**, sin error de ejecución.
+
+> `total_conversion_value` solo devuelve revenue en actividades con Floodlight de tipo
+> **Sales**. En un Floodlight de tipo *Counter* devolverá 0.
+
 ### 5.9 Google Analytics 4
+
+**Prerrequisitos** antes de poder usar cualquier función `ga4_*`:
+
+1. **Vincular la cuenta de Google Analytics con Display & Video 360** para que ambas
+   compartan datos.
+2. Tener creado el **evento** en Google Analytics.
+3. Tener **volumen de conversiones suficiente** para que el modelo entrene. Se verifica
+   en GA4 en *Acquisition › Traffic acquisition › Session source platform*, filtrando
+   por `dv360`.
+
+> Al vincular GA con DV360 se comparten datos de conversión. Esos datos **solo son
+> visibles en DV360 a través del reporting de métricas de custom bidding**, no en el
+> reporting estándar.
 
 | Función | Tipo | Detalle |
 |---|---|---|

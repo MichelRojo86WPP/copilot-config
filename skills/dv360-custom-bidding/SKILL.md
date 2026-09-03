@@ -186,6 +186,7 @@ en cualquier código: el script lo va a heredar otra persona.
 | **Data sparsity** — el modelo no entrena | Menos conversiones de las que exigen los [requisitos de datos](https://support.google.com/displayvideo/answer/9723477) | Inyectar una señal intermedia (checkout, form) con valor fijo pequeño |
 | **% de errores de ejecución > 0** | `None` sin guarda antes de `float()`, `str()` o una comparación | Añadir `if x == None:` para cada llamada a `conversion_*` |
 | El script puntúa 0 siempre | El Floodlight **no está asignado** a los Line Items que usan el algoritmo | Asignar la conversión en *tracked conversions* de cada LI. Es el error operativo más repetido. |
+| `conversion_custom_variable` devuelve siempre `None` | La u-variable **no se ha compartido** con DV360 | *Resources › Floodlight Group › [actividad] › Custom Floodlight variables › icono ver › marcar la casilla*. Sin este paso no hay error de ejecución, solo `None` silencioso. |
 | Puntúa conversiones que no son de esta campaña | Píxel global de Floodlight que dispara en todo el site | Segmentar por `conversion_custom_variable` (p. ej. ID de producto) en lugar de por el conteo global |
 | Una conversión cara domina el entrenamiento | Cola larga de revenue | Escalonar por tramos (tROAS "aplanado") o `log(_value)` |
 | Empeora al asignarlo a campañas ajenas | No hay rama por defecto | Añadir siempre un **bloque fallback** con peso bajo |
@@ -208,6 +209,9 @@ en cualquier código: el script lo va a heredar otra persona.
 
 - [Custom bidding script reference](https://support.google.com/displayvideo/answer/11967043)
 - [Create a custom bidding script](https://support.google.com/displayvideo/answer/9728993)
+- [Using Floodlight data in custom bidding scripts](https://support.google.com/displayvideo/answer/11969760)
+- [Using impression level data in custom bidding scripts](https://support.google.com/displayvideo/answer/11968381)
+- [Using data from Google Analytics in custom bidding scripts](https://support.google.com/displayvideo/answer/11969662)
 - [Custom bidding data requirements](https://support.google.com/displayvideo/answer/9723477)
 - [A/B experiments en DV360](https://support.google.com/displayvideo/answer/9040669)
 - [DV360 API](https://developers.google.com/display-video/api/reference/rest)
