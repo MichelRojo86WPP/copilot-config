@@ -205,6 +205,7 @@ en cualquier código: el script lo va a heredar otra persona.
 | [`references/syntax-reference.md`](references/syntax-reference.md) | DSL completo: sintaxis, operadores, funciones, **todas** las señales, limitaciones y ciclo de vida operativo. |
 | [`references/patterns.md`](references/patterns.md) | Patrones de código reutilizables, limpios y listos para pegar, con IDs de ejemplo anonimizados. |
 | [`references/video-genre-ids.md`](references/video-genre-ids.md) | Mapeo de `video_genre_ids` y enlaces a las hojas de IDs de DV360. |
+| [`references/ecosistema-y-recursos.md`](references/ecosistema-y-recursos.md) | Herramientas y repositorios externos (`bid2x`, *Script Builder*) con su nivel de confianza, y qué no se ha podido verificar. |
 
 > Los scripts reales de cliente (Floodlight IDs, IOs, conjuntos de productos, historial de
 > iteraciones) **no viven aquí**: este repositorio es público y portable. Van en el repo del
