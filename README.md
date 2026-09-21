@@ -6,7 +6,7 @@ Repositorio de configuración personal de GitHub Copilot — skills, MCP servers
 
 ```
 copilot-config/
-├── skills/                     # Skills instaladas globalmente en Copilot (31)
+├── skills/                     # Skills instaladas globalmente en Copilot (32)
 │   ├── meridian-geox/          # Meridian GeoX - diseno y analisis de geo-experimentos
 │   ├── meridian-mmm/           # Meridian MMM - media mix modeling bayesiano
 │   ├── causal-impact/          # Analisis de impacto causal
@@ -15,6 +15,7 @@ copilot-config/
 │   ├── ga4-analyst/            # Analisis en Google Analytics 4
 │   ├── google-ads-analyst/     # Analisis en Google Ads
 │   ├── meta-ads-analyst/       # Analisis en Meta Ads
+│   ├── dv360-custom-bidding/   # Custom bidding scripts en Display & Video 360
 │   ├── powerbi-*/              # Desarrollo y diseno de informes Power BI
 │   ├── sqldb-*/ sqldw-*/       # Autoria y consumo SQL Database / Warehouse
 │   └── ...                     # ver tabla completa mas abajo
@@ -126,6 +127,7 @@ Las skills se descubren automaticamente. Las principales del area de analytics:
 | `ga4-analyst` | Analisis en Google Analytics 4 |
 | `google-ads-analyst` | Analisis y activacion en Google Ads |
 | `meta-ads-analyst` | Analisis en Meta Ads |
+| `dv360-custom-bidding` | Scripts de custom bidding en Display & Video 360 |
 | `marketing-attribution` | Modelos de atribucion de marketing |
 | `client-reporting` | Generacion de informes de cliente |
 | `ml-ops-engineer` | Pipelines ML, Docker, CI/CD para modelos |
