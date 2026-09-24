@@ -99,9 +99,10 @@ Todas estas dan 404: `/v4/datasetrw/datasets`, `/v4/datasets`,
 
 ---
 
-## El MCP oficial no arranca con el SDK actual
+## El MCP oficial no arranca si lo instalas con pip
 
-**Este fallo no depende de la versión de Domino: le pasa a todo el mundo hoy.**
+**Este fallo no depende de la versión de Domino, y explica por qué "a ellos les
+funciona" y a ti no.**
 
 El `pyproject.toml` del repositorio oficial declara:
 
@@ -109,20 +110,30 @@ El `pyproject.toml` del repositorio oficial declara:
 dependencies = ["mcp[cli]>=1.6.0", ...]
 ```
 
-Ese rango no tiene techo, así que `pip` instala **mcp 2.x**. En la serie 2 la clase
-`FastMCP` pasó a llamarse `MCPServer` y cambió de módulo, de modo que el servidor
-revienta nada más importarse:
+Ese rango no tiene techo. Lo que ocurre depende del instalador:
+
+| Instalador | Resuelve | Resultado |
+|---|---|---|
+| `uv pip install -e .` / `uv run` | **mcp 1.6.0** (del `uv.lock` del repo) | funciona |
+| `pip install -e .` | **mcp 2.x** (ignora el `uv.lock`) | **revienta** |
+
+El repositorio incluye un `uv.lock`, y `uv` lo respeta. `pip` no lo mira siquiera, así
+que resuelve al máximo disponible. En la serie 2 la clase `FastMCP` pasó a llamarse
+`MCPServer` y cambió de módulo, de modo que el servidor muere nada más importarse:
 
 ```
 ModuleNotFoundError: No module named 'mcp.server.fastmcp'.
 This is mcp 2.x, where FastMCP was renamed to MCPServer
 ```
 
+Por eso la documentación oficial, que da por hecho `uv`, nunca menciona el problema:
+solo aparece si tiras de `pip`, que es justo el camino al que caes si no tienes `uv`.
+
 Lo peor es **cómo se manifiesta**: el cliente MCP lanza el proceso, el proceso muere
 al instante y lo único que ves es un servidor marcado como caído, sin explicación.
 Es muy fácil culpar a las credenciales o a la red.
 
-Solución, ya aplicada por `scripts/domino_mcp_setup.py install`:
+Solución en la vía `pip`, ya aplicada por `scripts/domino_mcp_setup.py install`:
 
 ```bash
 pip install "mcp[cli]<2"
@@ -135,7 +146,8 @@ si el SDK no es compatible, en vez de dejar que lo descubras en tu cliente.
 
 ## El MCP, probado en vivo
 
-Con `mcp 1.30.0`, contra la instancia real, el servidor:
+Contra la instancia real, por las dos vías (`uv run` y el python del venv), el
+servidor:
 
 - Completa el `initialize` y se identifica como `domino_server`.
 - Expone **10 herramientas**, no las 2 que anuncia su README:

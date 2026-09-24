@@ -158,11 +158,14 @@ uv pip install "mcp[cli]<2"     # imprescindible, ver abajo
 Requisitos: Python ≥ 3.11. Dependencias: `mcp[cli]>=1.6.0`, `FastMCP`, `requests`,
 `python-dotenv`.
 
-> **Fija `mcp` a la serie 1 o el servidor no arranca.** El `pyproject.toml` oficial
-> pide `mcp[cli]>=1.6.0`, sin techo, así que `pip` instala hoy **mcp 2.x**. En la
-> serie 2 `FastMCP` se renombró a `MCPServer` y el servidor muere al importarse con
-> `ModuleNotFoundError: No module named 'mcp.server.fastmcp'`. El síntoma es
-> engañoso: tu cliente solo muestra el servidor como caído, sin motivo.
+> **Si instalas con `pip`, fija `mcp` a la serie 1 o el servidor no arranca.** El
+> `pyproject.toml` oficial pide `mcp[cli]>=1.6.0`, sin techo. `uv` respeta el
+> `uv.lock` del repositorio y se queda en mcp 1.6.0, así que funciona; `pip` ignora
+> ese lock y resuelve a **mcp 2.x**, donde `FastMCP` se renombró a `MCPServer` y el
+> servidor muere al importarse con
+> `ModuleNotFoundError: No module named 'mcp.server.fastmcp'`. Como la documentación
+> oficial da por hecho `uv`, nunca menciona el problema. El síntoma engaña: tu
+> cliente solo muestra el servidor como caído, sin motivo.
 > `scripts/domino_mcp_setup.py install` ya aplica el pin y comprueba el arranque.
 
 ### Credenciales
@@ -257,8 +260,9 @@ sale bien, **lanza el run definitivo con el CLI** fijando commit y tier.
 
 ## Problemas frecuentes
 
-**El servidor aparece caído nada más registrarlo.** Casi siempre es el SDK: tienes
-`mcp` 2.x instalado y el servidor oficial necesita la serie 1. Compruébalo con
+**El servidor aparece caído nada más registrarlo.** Casi siempre es el SDK: lo
+instalaste con `pip`, que ignora el `uv.lock` del repositorio y te ha puesto `mcp`
+2.x, incompatible. Compruébalo con
 `python -c "from mcp.server.fastmcp import FastMCP"` dentro de su entorno virtual.
 Si falla, `pip install "mcp[cli]<2"`.
 
