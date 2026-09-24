@@ -286,29 +286,46 @@ def cmd_check(args):
 
     if host and clave and not fallos:
         print(f"\n  Probando conexion contra {host} ...")
-        # Mismo endpoint que usa el MCP server para resolver proyectos.
-        url = host.rstrip("/") + "/v4/gateway/projects?relationship=All"
-        req = urllib.request.Request(
-            url, headers={"X-Domino-Api-Key": clave, "Accept": "application/json"})
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                datos = json.loads(resp.read().decode("utf-8"))
-            proyectos = datos if isinstance(datos, list) else datos.get("data", [])
+        # Mismo endpoint que usa el MCP server para resolver proyectos. En Domino < 6.4
+        # el valor 'All' no existe y devuelve HTTP 500, asi que se combinan los dos
+        # valores validos: 'Owned' y 'Collaborating'.
+        proyectos = []
+        ultimo_error = None
+        for relacion in ("Owned", "Collaborating"):
+            url = host.rstrip("/") + f"/v4/gateway/projects?relationship={relacion}"
+            req = urllib.request.Request(
+                url, headers={"X-Domino-Api-Key": clave, "Accept": "application/json",
+                              "Accept-Encoding": "identity"})
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    datos = json.loads(resp.read().decode("utf-8"))
+                lote = datos if isinstance(datos, list) else datos.get("data", [])
+                proyectos.extend(p for p in lote if isinstance(p, dict))
+            except (urllib.error.HTTPError, urllib.error.URLError, ValueError) as exc:
+                ultimo_error = exc
+
+        if proyectos or ultimo_error is None:
+            vistos, unicos = set(), []
+            for p in proyectos:
+                if p.get("id") in vistos:
+                    continue
+                vistos.add(p.get("id"))
+                unicos.append(p)
+            proyectos = unicos
             print(f"  [ok]    Conexion correcta. {len(proyectos)} proyecto(s) accesibles.\n")
             if proyectos:
                 print("  Usa estos valores en domino_project_settings.md:\n")
                 print(f"    {'PROPIETARIO':<24} {'PROYECTO':<34} TIPO")
                 for p in proyectos[:25]:
-                    if not isinstance(p, dict):
-                        continue
-                    duenyo = (p.get("ownerUsername") or p.get("owner")
+                    duenyo = (p.get("ownerUsername") or p.get("ownerName") or p.get("owner")
                               or (p.get("ownerInfo") or {}).get("ownerUsername") or "?")
                     nombre = p.get("name", "?")
                     tipo = "DFS" if not p.get("mainRepository") else "Git"
-                    print(f"    {duenyo:<24} {nombre:<34} {tipo}")
+                    print(f"    {str(duenyo):<24} {nombre:<34} {tipo}")
                 if len(proyectos) > 25:
                     print(f"    ... y {len(proyectos) - 25} mas")
-        except urllib.error.HTTPError as exc:
+        elif isinstance(ultimo_error, urllib.error.HTTPError):
+            exc = ultimo_error
             fallos += 1
             if exc.code in (401, 403):
                 print(f"  [FALLO] {exc.code}: la API key no es valida o esta revocada.")
@@ -319,11 +336,11 @@ def cmd_check(args):
                 print("          usar 'Authorization: Bearer' en vez de 'X-Domino-Api-Key'.")
             else:
                 print(f"  [FALLO] HTTP {exc.code} al contactar con Domino.")
-        except urllib.error.URLError as exc:
+        elif isinstance(ultimo_error, urllib.error.URLError):
             fallos += 1
-            print(f"  [FALLO] No se pudo conectar: {exc.reason}")
+            print(f"  [FALLO] No se pudo conectar: {ultimo_error.reason}")
             print("          Revisa la URL, la VPN corporativa o el proxy.")
-        except ValueError:
+        else:
             fallos += 1
             print("  [FALLO] Domino respondio algo que no es JSON.")
             print("          Suele indicar que la URL apunta a una pagina de login.")
