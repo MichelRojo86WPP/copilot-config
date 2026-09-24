@@ -4,6 +4,11 @@ Todo lo de este documento está extraído del OpenAPI oficial
 **Domino Public API v6.4.0** (`https://docs.domino.ai/api-specs/cloud/public-api.json`).
 Si un endpoint no aparece aquí, **compruébalo antes de usarlo**: no lo inventes.
 
+> ⚠️ **Si la instancia es anterior a 6.4, varias de estas rutas no existen.**
+> Comprobado contra una 6.2.2 real: `resolveGitRef` da 404,
+> `/api/hardwaretiers/v1/hardwaretiers` da 403 y `relationship=All` da 500.
+> Ver `references/verificado-6.2.md` antes de escribir código contra una 6.2/6.3.
+
 Cada despliegue publica además su propia documentación navegable en
 `https://<tu-dominio-domino>/docs`.
 

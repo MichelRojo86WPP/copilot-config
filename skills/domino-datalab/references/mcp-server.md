@@ -44,7 +44,6 @@ el proyecto es de otra persona.
 ---
 
 ## Lo que el MCP server NO puede hacer
-
 Estas tres limitaciones están en el código, y son la razón de que el CLI
 `scripts/domino_job.py` siga siendo necesario:
 
@@ -68,6 +67,17 @@ un run reproducible atado a un SHA (el que va al cliente) hay que usar el CLI.
 **3. Parte el comando por espacios** con `.split()`. Un argumento entrecomillado con
 espacios (`--titulo "MMM Melia 2026"`) se rompe en trozos. Evita espacios en los
 argumentos o pásalos por un fichero de configuración.
+
+**4. (Solo en Domino < 6.4) No resuelve proyectos ajenos.** Su `_get_project_id()`
+consulta `relationship=Owned` y, si no encuentra el proyecto, reintenta con
+`relationship=All`. En 6.2.2 ese valor **no existe** y devuelve HTTP 500, que su
+`except requests.exceptions.RequestException` se traga silenciosamente: la función
+acaba devolviendo `None`.
+
+Efecto real: **las cinco herramientas de ficheros fallan en proyectos de los que no eres
+propietario**. `run_domino_job` no se ve afectada, porque direcciona por
+`user_name`/`project_name` y nunca necesita el `projectId`. Detalle en
+`references/verificado-6.2.md`.
 
 ---
 

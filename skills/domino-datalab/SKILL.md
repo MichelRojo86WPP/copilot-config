@@ -269,6 +269,7 @@ Ver `references/pitfalls.md` para la lista completa. Los tres que más duelen:
 | Fichero | Contenido |
 |---|---|
 | `references/mcp-server.md` | **El MCP server oficial**: 10 herramientas, instalación, límites |
+| `references/verificado-6.2.md` | **Qué funciona de verdad en una 6.2.2**: diferencias con 6.4, tiers, entornos |
 | `references/remote-development.md` | SSH, extensión de VS Code y asistentes en el Workspace |
 | `references/api-reference.md` | Endpoints reales, esquemas, enums y ejemplos `curl` |
 | `references/workflow-github.md` | El ciclo GitHub + Domino + Copilot, paso a paso |

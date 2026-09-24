@@ -228,7 +228,31 @@ Fíate del código, no del README.
 
 ---
 
-## 10. Higiene de proyecto
+## 10. La versión de la instancia manda
+
+Esta skill documenta el Public API **6.4.0**, pero muchas instancias corporativas van por
+detrás. Comprobado contra una **6.2.2** real:
+
+| Ruta | 6.4 | 6.2.2 |
+|---|---|---|
+| `POST /api/projects/beta/.../commits/resolveGitRef` | ✅ | ❌ 404 |
+| `GET /api/hardwaretiers/v1/hardwaretiers` | ✅ | ❌ 403 (solo admin) |
+| `GET /v4/gateway/projects?relationship=All` | ✅ | ❌ 500 |
+
+Dos reglas que se derivan:
+
+1. **Un 404 en `GET` no prueba que la ruta no exista.** Puede aceptar solo `POST`.
+   `GET /api/jobs/v1/jobs` da 404 y `POST /api/jobs/v1/jobs` funciona perfectamente.
+   Sondea siempre con el método correcto antes de concluir que algo falta.
+2. **Los errores de Domino no siempre son JSON.** Un 403 puede devolver un cuerpo
+   binario; si lo decodificas a ciegas con `errors="replace"` obtienes basura ilegible
+   que oculta el problema real. Detecta el caso y di "cuerpo no textual de N bytes".
+
+Detalle completo en `references/verificado-6.2.md`.
+
+---
+
+## 11. Higiene de proyecto
 
 - Los secretos van en variables de entorno del proyecto, **nunca en el repositorio**.
 - `.dominoignore` funciona como `.gitignore` y excluye ficheros de las nuevas

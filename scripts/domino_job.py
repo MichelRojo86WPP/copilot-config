@@ -54,6 +54,9 @@ CONFIG_PATH = Path.home() / ".domino" / "config.json"
 EP_SELF = "/api/users/v1/self"
 EP_PROJECTS = "/api/projects/beta/projects"
 EP_HARDWARE_TIERS = "/api/hardwaretiers/v1/hardwaretiers"
+# En 6.2 el endpoint anterior esta reservado a administradores (403). El scope de
+# proyecto funciona para cualquier usuario y ademas solo lista los tiers permitidos.
+EP_TIERS_PROYECTO = "/v4/projects/{project_id}/hardwareTiers"
 EP_ENVIRONMENTS = "/api/environments/beta/environments"
 EP_JOB_START = "/api/jobs/v1/jobs"
 EP_JOBS = "/api/jobs/beta/jobs"
@@ -111,7 +114,8 @@ def cargar_config(host_flag=None, token_flag=None):
 
 def cabeceras(token, api_key):
     """Cabeceras de autenticacion. PAT/Service Account usan Bearer; la key legacy no."""
-    cab = {"Content-Type": "application/json", "Accept": "application/json"}
+    cab = {"Content-Type": "application/json", "Accept": "application/json",
+           "Accept-Encoding": "identity"}
     if token:
         valor = token if token.lower().startswith("bearer ") else f"Bearer {token}"
         cab["Authorization"] = valor
@@ -136,18 +140,43 @@ def peticion(host, ruta, token, api_key, metodo="GET", cuerpo=None, params=None)
             crudo = resp.read().decode("utf-8")
             return json.loads(crudo) if crudo else {}
     except urllib.error.HTTPError as exc:
-        detalle = exc.read().decode("utf-8", errors="replace")[:1000]
+        detalle = _cuerpo_legible(exc.read())
         if exc.code in (401, 403):
             detalle += ("\n  -> Revisa que el token sea valido y no haya expirado. "
-                        "Los PAT se revocan solos si un admin cambia tus roles.")
+                        "Los PAT se revocan solos si un admin cambia tus roles.\n"
+                        "  -> Un 403 tambien puede ser un endpoint reservado a administradores.")
+        elif exc.code == 404:
+            detalle += ("\n  -> Endpoint inexistente en esta version de Domino. "
+                        "Algunas rutas del Public API solo existen desde 6.4.")
         error(f"HTTP {exc.code} en {metodo} {ruta}\n  {detalle}")
     except urllib.error.URLError as exc:
         error(f"No se pudo conectar con {host}: {exc.reason}")
 
 
+def _cuerpo_legible(crudo, limite=600):
+    """Convierte el cuerpo de un error en texto. Domino a veces responde binario."""
+    try:
+        texto = crudo.decode("utf-8")
+    except UnicodeDecodeError:
+        return f"<cuerpo no textual de {len(crudo)} bytes>"
+    if sum(c.isprintable() or c.isspace() for c in texto) < len(texto) * 0.9:
+        return f"<cuerpo no textual de {len(crudo)} bytes>"
+    return texto[:limite]
+
+
 def error(mensaje):
     print(f"[ERROR] {mensaje}", file=sys.stderr)
     sys.exit(1)
+
+
+def _items(datos, clave):
+    """Normaliza la respuesta: el Public API devuelve {clave: [...]} y el legacy v4
+    devuelve la lista pelada. Sin esto, .get() revienta sobre una lista."""
+    if isinstance(datos, list):
+        return datos
+    if isinstance(datos, dict):
+        return datos.get(clave, [])
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -156,17 +185,19 @@ def error(mensaje):
 
 def cmd_whoami(args, host, token, api_key):
     datos = peticion(host, EP_SELF, token, api_key)
-    print(f"Usuario : {datos.get('userName')}")
-    print(f"Nombre  : {datos.get('firstName', '')} {datos.get('lastName', '')}".rstrip())
-    print(f"Email   : {datos.get('email')}")
-    print(f"ID      : {datos.get('id')}")
+    # El Public API envuelve la respuesta en {"user": {...}}; el legacy v4 no.
+    u = datos.get("user", datos)
+    print(f"Usuario : {u.get('userName')}")
+    print(f"Nombre  : {u.get('firstName', '')} {u.get('lastName', '')}".rstrip())
+    print(f"Email   : {u.get('email')}")
+    print(f"ID      : {u.get('id')}")
     print(f"Host    : {host}")
 
 
 def cmd_projects(args, host, token, api_key):
     datos = peticion(host, EP_PROJECTS, token, api_key,
                      params={"limit": args.limit, "nameFilter": args.search})
-    proyectos = datos.get("projects", datos if isinstance(datos, list) else [])
+    proyectos = _items(datos, "projects")
     if not proyectos:
         print("No se han encontrado proyectos.")
         return
@@ -180,21 +211,32 @@ def cmd_projects(args, host, token, api_key):
 
 
 def cmd_tiers(args, host, token, api_key):
-    datos = peticion(host, EP_HARDWARE_TIERS, token, api_key)
-    tiers = datos.get("hardwareTiers", datos if isinstance(datos, list) else [])
-    print(f"{'ID':30}  {'NOMBRE':32}  {'GPU':5}  CORES/MEM")
+    """Lista hardware tiers. Con --project-id usa el scope de proyecto, que es el
+    unico accesible para usuarios no administradores."""
+    if args.project_id:
+        datos = peticion(host, EP_TIERS_PROYECTO.format(project_id=args.project_id),
+                         token, api_key)
+    else:
+        datos = peticion(host, EP_HARDWARE_TIERS, token, api_key)
+    tiers = _items(datos, "hardwareTiers")
+    print(f"{'ID':26}  {'NOMBRE':26}  {'GPU':4}  {'CORES':6}  {'MEM':9}  CENT/MIN")
     print("-" * 92)
     for t in tiers:
         ht = t.get("hardwareTier", t)
-        cores = ht.get("cores", "?")
-        mem = ht.get("memory", "?")
-        gpus = ht.get("numberOfGpus", ht.get("gpus", 0)) or 0
-        print(f"{str(ht.get('id')):30}  {str(ht.get('name')):32}  {str(gpus):5}  {cores}c / {mem}GB")
+        rec = ht.get("hwtResources") or {}
+        cores = rec.get("cores", ht.get("cores", "?"))
+        mem = rec.get("memory") or {}
+        mem_txt = f"{mem.get('value')}{mem.get('unit','')}" if mem else str(ht.get("memory", "?"))
+        gpu_cfg = ht.get("gpuConfiguration") or {}
+        gpus = ht.get("numberOfGpus", gpu_cfg.get("numberOfGpus", 0)) or 0
+        coste = ht.get("centsPerMinute", "?")
+        print(f"{str(ht.get('id')):26}  {str(ht.get('name')):26}  {str(gpus):4}  "
+              f"{str(cores):6}  {mem_txt:9}  {coste}")
 
 
 def cmd_envs(args, host, token, api_key):
     datos = peticion(host, EP_ENVIRONMENTS, token, api_key, params={"limit": args.limit})
-    entornos = datos.get("environments", datos if isinstance(datos, list) else [])
+    entornos = _items(datos, "environments")
     print(f"{'ID':26}  NOMBRE")
     print("-" * 80)
     for e in entornos:
@@ -381,6 +423,8 @@ def construir_parser():
     p.add_argument("--limit", type=int, default=50)
 
     p = sub.add_parser("tiers", help="Lista los hardware tiers (incluye los de GPU)")
+    p.add_argument("--project-id", help="Recomendado: lista los tiers de ese proyecto. "
+                                        "Sin el, el endpoint global exige rol de admin")
 
     p = sub.add_parser("envs", help="Lista los compute environments")
     p.add_argument("--limit", type=int, default=50)

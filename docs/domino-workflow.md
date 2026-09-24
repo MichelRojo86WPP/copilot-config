@@ -25,6 +25,52 @@ proyectos **DFS** el código vive dentro de Domino y no hay GitHub de por medio.
 
 ---
 
+## Tu instancia (verificado el 2026-09-24)
+
+| Dato | Valor |
+|---|---|
+| Host | `https://datascience.choreograph.com` |
+| Versión | **Domino 6.2.2** |
+| Tu usuario | `miguel_rojo` |
+| API key | ✅ Activa (6.2 es anterior a la deprecación de 6.3) |
+| Proyectos | 1: `quick-start` (DFS, de ejemplo) |
+| GPU disponible | ✅ T4 |
+
+**Probado de extremo a extremo**: `domino_job.py` lanzó un Job real, hizo streaming de
+los logs y terminó en `Succeeded`. El flujo local → Domino funciona.
+
+### Hardware tiers con GPU
+
+| ID | GPU | Cores | Memoria | Cent/min |
+|---|---|---|---|---|
+| `n1-highmem4-gpu-t4` | 1 × T4 | 1.8 | 18 GiB | 1.06 |
+| **`n1-highmem16-gpu-t4`** | **1 × T4** | **12** | **88 GiB** | **2.40** |
+| `gpu-k8s` (GPU) | 1 | 6 | 43 GiB | 3.53 |
+
+Para **Meridian MMM** usa `n1-highmem16-gpu-t4`: el MCMC de TensorFlow Probability
+necesita RAM, y el T4 pequeño (18 GiB) se queda corto en cuanto crecen las cadenas.
+
+Sin GPU, el más rentable es `n1-standard-8` (6 cores, 22 GiB, 0.70 cent/min): cuesta lo
+mismo que `Large` pero rinde más.
+
+### Aviso sobre entornos
+
+Meridian exige **Python ≥ 3.11**. De los entornos preinstalados, el único que cumple es
+`Custom Environment: py3.11 - r4.4 - Domino 6.0`. El `Domino Standard Environment` va
+con Python 3.10 y **no sirve**. Si ese custom no trae las dependencias de Meridian,
+habrá que crear un entorno propio partiendo de él.
+
+### Diferencias de la 6.2 que te van a afectar
+
+- `domino_job.py resolve` **no funciona** (el endpoint es de 6.4). Saca el SHA en local
+  con `git rev-parse origin/<rama>` y pásalo a `--commit`.
+- `domino_job.py tiers` necesita `--project-id`; sin él, el endpoint global exige rol de
+  administrador.
+- Las herramientas de ficheros del MCP solo encontrarán proyectos **de los que seas
+  propietario**.
+
+---
+
 ## Las cuatro formas de trabajar
 
 | Modo | Editas en | Ejecuta en | Cuándo |
@@ -246,6 +292,7 @@ entrena.
 |---|---|
 | `skills/domino-datalab/SKILL.md` | El conocimiento que carga Copilot |
 | `skills/domino-datalab/references/mcp-server.md` | El MCP a fondo: 10 herramientas, límites |
+| `skills/domino-datalab/references/verificado-6.2.md` | Qué funciona de verdad en tu 6.2.2 |
 | `skills/domino-datalab/references/remote-development.md` | SSH, extensión de VS Code, asistentes |
 | `skills/domino-datalab/references/api-reference.md` | Endpoints reales verificados |
 | `skills/domino-datalab/references/pitfalls.md` | Las trampas, por temas |
