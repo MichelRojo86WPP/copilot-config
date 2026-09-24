@@ -99,6 +99,64 @@ Todas estas dan 404: `/v4/datasetrw/datasets`, `/v4/datasets`,
 
 ---
 
+## El MCP oficial no arranca con el SDK actual
+
+**Este fallo no depende de la versión de Domino: le pasa a todo el mundo hoy.**
+
+El `pyproject.toml` del repositorio oficial declara:
+
+```toml
+dependencies = ["mcp[cli]>=1.6.0", ...]
+```
+
+Ese rango no tiene techo, así que `pip` instala **mcp 2.x**. En la serie 2 la clase
+`FastMCP` pasó a llamarse `MCPServer` y cambió de módulo, de modo que el servidor
+revienta nada más importarse:
+
+```
+ModuleNotFoundError: No module named 'mcp.server.fastmcp'.
+This is mcp 2.x, where FastMCP was renamed to MCPServer
+```
+
+Lo peor es **cómo se manifiesta**: el cliente MCP lanza el proceso, el proceso muere
+al instante y lo único que ves es un servidor marcado como caído, sin explicación.
+Es muy fácil culpar a las credenciales o a la red.
+
+Solución, ya aplicada por `scripts/domino_mcp_setup.py install`:
+
+```bash
+pip install "mcp[cli]<2"
+```
+
+El instalador además **comprueba el arranque** (importa `FastMCP`) y avisa en el acto
+si el SDK no es compatible, en vez de dejar que lo descubras en tu cliente.
+
+---
+
+## El MCP, probado en vivo
+
+Con `mcp 1.30.0`, contra la instancia real, el servidor:
+
+- Completa el `initialize` y se identifica como `domino_server`.
+- Expone **10 herramientas**, no las 2 que anuncia su README:
+  `run_domino_job`, `check_domino_job_run_status`, `check_domino_job_run_results`,
+  `get_domino_environment_info`, `list_domino_project_files`,
+  `upload_file_to_domino_project`, `download_file_from_domino_project`,
+  `sync_local_file_to_domino`, `smart_sync_file`, `open_web_browser`.
+- `get_domino_environment_info` devuelve `auth_mode: api_key` e
+  `inside_domino_workspace: false` (correcto, se ejecuta en el portátil).
+- `list_domino_project_files` lista de verdad los ficheros del proyecto.
+
+### Aviso para quien sondee el servidor a mano
+
+Si lanzas el servidor con `subprocess.run(..., input=...)`, stdin se cierra en cuanto
+termina de escribirse. El servidor interpreta el EOF como cierre de sesión y **cancela
+las tareas `async` en vuelo**: las herramientas rápidas responden y las que hacen una
+llamada HTTP parecen colgarse. No es un fallo del servidor. Usa `Popen`, mantén stdin
+abierto y lee stdout en un hilo aparte.
+
+---
+
 ## Regla general que se deduce
 
 **No asumas que una ruta del Public API existe porque está en el OpenAPI de 6.4.**

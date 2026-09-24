@@ -130,18 +130,29 @@ def cmd_install(args):
     print("  Repositorio listo.")
 
     print("\nPaso 3/4 - Instalando dependencias")
+    # El pyproject oficial pide "mcp[cli]>=1.6.0", que hoy resuelve a mcp 2.x.
+    # En la serie 2 FastMCP paso a llamarse MCPServer, asi que el servidor no
+    # arranca: ModuleNotFoundError: No module named 'mcp.server.fastmcp'.
+    # Por eso forzamos la serie 1 despues de instalar el paquete.
     if gestor == "uv":
         ejecutar(["uv", "venv"], cwd=destino, silencioso=True)
         codigo, _ = ejecutar(["uv", "pip", "install", "-e", "."], cwd=destino)
+        if codigo == 0:
+            codigo, _ = ejecutar(["uv", "pip", "install", "mcp[cli]<2"], cwd=destino)
     else:
         venv = destino / ".venv"
         if not venv.exists():
             ejecutar([sys.executable, "-m", "venv", str(venv)], cwd=destino, silencioso=True)
         pip = venv / ("Scripts" if os.name == "nt" else "bin") / "pip"
         codigo, _ = ejecutar([str(pip), "install", "-e", "."], cwd=destino)
+        if codigo == 0:
+            codigo, _ = ejecutar([str(pip), "install", "mcp[cli]<2"], cwd=destino)
     if codigo != 0:
         error("Fallo la instalacion de dependencias. Revisa el log de arriba.")
-    print("  Dependencias instaladas.")
+    print("  Dependencias instaladas (mcp fijado a la serie 1).")
+
+    if not _comprobar_arranque(destino, gestor):
+        aviso("El servidor no pudo importarse. Revisa el paso 3.")
 
     print("\nPaso 4/4 - Configuracion")
     _avisar_colision()
@@ -153,6 +164,29 @@ def cmd_install(args):
 # ---------------------------------------------------------------------------
 # config
 # ---------------------------------------------------------------------------
+
+def _comprobar_arranque(destino, gestor):
+    """Importa el servidor para detectar incompatibilidades del SDK de MCP.
+
+    Vale la pena hacerlo aqui: si falla, el usuario lo ve durante la instalacion
+    en vez de descubrirlo como un servidor "caido" en su cliente, sin mensaje.
+    """
+    venv = destino / ".venv" / ("Scripts" if os.name == "nt" else "bin")
+    python = venv / ("python.exe" if os.name == "nt" else "python")
+    if not python.exists():
+        return True
+    codigo, salida = ejecutar(
+        [str(python), "-c", "from mcp.server.fastmcp import FastMCP"],
+        cwd=destino, silencioso=True,
+    )
+    if codigo != 0:
+        aviso("El SDK de MCP instalado no es compatible con el servidor oficial.")
+        if "fastmcp" in (salida or "").lower():
+            aviso("Ejecuta: pip install 'mcp[cli]<2' dentro de " + str(venv))
+        return False
+    print("  Arranque comprobado: FastMCP importa correctamente.")
+    return True
+
 
 def _bloque_config(destino, cliente, gestor="uv"):
     if gestor == "uv" or buscar("uv"):
