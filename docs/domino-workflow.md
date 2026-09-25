@@ -224,6 +224,24 @@ detrás de cualquier ejecución.
 *Stop*.** Cerrar la pestaña del navegador no lo apaga. Es la causa número uno de gasto
 inesperado en Domino.
 
+### Comprobarlo en la interfaz
+
+Dos páginas, verificadas en tu instancia. La primera es la que importa:
+
+| Página | Para qué |
+|---|---|
+| [`/workspaces`](https://datascience.choreograph.com/workspaces) | **Todos tus Workspaces, de todos los proyectos.** Es la única que factura sin avisar |
+| [`/jobs`](https://datascience.choreograph.com/jobs) | Todos tus Jobs, con su estado |
+
+Si solo quieres mirar un proyecto:
+`/workspaces/<usuario>/<proyecto>` y `/jobs/<usuario>/<proyecto>`.
+
+Qué buscar: cualquier fila cuyo estado **no** sea `Stopped`, `Succeeded`, `Failed` o
+`Error`. Un `Running` o `Starting` está consumiendo máquina ahora mismo.
+
+Para apagar un Workspace hay que pulsar **Stop** en su fila. Cerrar la pestaña del
+navegador no lo apaga.
+
 Para ver lo que ha costado algo:
 
 ```bash
