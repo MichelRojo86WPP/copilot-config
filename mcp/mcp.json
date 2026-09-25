@@ -1,5 +1,14 @@
 {
   "mcpServers": {
+    "domino_server": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["--directory", "${DOMINO_MCP_DIR}", "run", "domino_mcp_server.py"],
+      "env": {
+        "DOMINO_HOST": "${DOMINO_HOST}",
+        "DOMINO_API_KEY": "${DOMINO_API_KEY}"
+      }
+    },
     "context7": {
       "type": "stdio",
       "command": "npx",

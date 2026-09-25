@@ -22,11 +22,14 @@ copilot-config/
 ├── extensions/                 # Extensiones de agente (scope usuario)
 │   ├── meridian-expert/        # Herramientas MMM: workflow, scaffold, pitfalls
 │   ├── geox-expert/            # Herramientas GeoX: workflow, design builder, pitfalls
-│   └── causal-impact-expert/   # Herramientas CausalImpact: workflow, checklist
+│   ├── causal-impact-expert/   # Herramientas CausalImpact: workflow, checklist
+│   └── domino-expert/          # Herramientas Domino: workflow, API, pitfalls, comandos
 ├── mcp/
-│   └── mcp.json                # Configuracion MCP global (context7)
+│   └── mcp.json                # Configuracion MCP global (context7, domino_server, ...)
 ├── scripts/
-│   └── nvidia_gen.py           # Generador de imagenes/video con IA (multi-proveedor)
+│   ├── nvidia_gen.py           # Generador de imagenes/video con IA (multi-proveedor)
+│   ├── domino_job.py           # Lanzador de Jobs en Domino con logs en streaming
+│   └── domino_mcp_setup.py     # Instala y valida el MCP server oficial de Domino
 ├── setup/
 │   ├── install.ps1             # Instalador automatico (Windows PowerShell)
 │   ├── switch-profile.ps1      # Perfiles de plugins para reducir consumo de tokens
@@ -34,6 +37,7 @@ copilot-config/
 └── docs/
     ├── nvidia-nim-setup.md     # Guia NVIDIA NIM
     ├── skills-guide.md         # Guia de uso de skills
+    ├── domino-workflow.md      # Trabajar en Domino manteniendo GitHub y Copilot
     ├── token-optimization.md   # Como reducir el consumo de cuota
     └── model-catalog.md        # Catalogo de modelos NVIDIA
 ```
@@ -136,6 +140,7 @@ Las skills se descubren automaticamente. Las principales del area de analytics:
 | `runbook-generator` | Documentacion operacional automatica |
 | `release-manager` | Versioning, changelogs, release notes |
 | `accelerated-computing-cudf` | GPU DataFrames con NVIDIA cuDF |
+| `domino-datalab` | Ejecutar proyectos en Domino Data Lab manteniendo el codigo en GitHub |
 
 Para activar una skill en Copilot escribe `/skill nombre-de-la-skill` en cualquier chat.
 
@@ -149,6 +154,7 @@ repositorios, no solo en aquel donde se desarrollaron.
 | `geox-expert` | Workflow GeoX, constructor de `DesignConfig`, trampas de API, scaffold de proyecto |
 | `meridian-expert` | Workflow MMM, scaffold de proyecto, trampas de API |
 | `causal-impact-expert` | Workflow CausalImpact, lecciones aprendidas, checklist |
+| `domino-expert` | Workflow Domino (MCP, CLI, SSH), API real, trampas, constructor de comandos de Job |
 
 ## Modelos NVIDIA NIM configurados
 
@@ -176,6 +182,19 @@ Los siguientes modelos estan disponibles directamente en el selector de modelos 
 | Server | Descripcion | Config |
 |--------|-------------|--------|
 | context7 | Documentacion actualizada de librerias via LLM | `mcp/mcp.json` |
+| domino_server | Lanzar Jobs en Domino Data Lab, leer resultados y sincronizar ficheros desde el chat | `mcp/mcp.json` |
+
+El MCP de Domino necesita instalarse aparte, porque se ejecuta desde un clon local del
+repositorio oficial:
+
+```bash
+python scripts/domino_mcp_setup.py install   # clona, instala e imprime la config
+python scripts/domino_mcp_setup.py check     # valida credenciales y lista proyectos
+```
+
+Variables necesarias: `DOMINO_MCP_DIR`, `DOMINO_HOST` y `DOMINO_API_KEY`.
+**No definas `DOMINO_API_HOST`** en local: el MCP la interpreta como "estoy dentro de
+un Workspace de Domino" y falla. Ver [docs/domino-workflow.md](docs/domino-workflow.md).
 
 ## Script de generacion de imagenes
 
@@ -228,4 +247,5 @@ Como este repositorio es **publico**, no hace falta token ni secret. Ver el READ
 
 - [Guia NVIDIA NIM](docs/nvidia-nim-setup.md)
 - [Guia de Skills](docs/skills-guide.md)
+- [Trabajar en Domino Data Lab](docs/domino-workflow.md)
 - [Catalogo de modelos](docs/model-catalog.md)
