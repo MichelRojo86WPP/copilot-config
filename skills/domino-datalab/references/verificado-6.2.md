@@ -402,6 +402,67 @@ Hay que fijar la semilla de `numpy` y de `tensorflow` al principio del script, y
 dejarla configurable por variable de entorno para poder comprobar aparte que el
 resultado es estable ante distintas semillas.
 
+## Verificar que no queda nada encendido
+
+Obligatorio al terminar cualquier trabajo. Tres comprobaciones, todas verificadas:
+
+```
+GET /v4/projects?ownerId={userId}          -> tus proyectos
+GET /api/jobs/beta/jobs?projectId={id}     -> status.isCompleted == false => vivo
+GET /v4/workspace?projectId={id}           -> items no vacio => vivo
+```
+
+`/v4/workspace` devuelve `{"items": [...], "paginationDetails": {...}, "totalCount": N}`.
+El estado real de cada uno esta en
+`mostRecentSession.sessionStatusInfo.rawExecutionDisplayStatus`.
+
+Para apps publicadas y tareas programadas:
+
+```
+GET /v4/modelProducts?projectId={id}       -> apps
+GET /v4/projects/{id}/scheduledjobs        -> ejecuciones programadas
+```
+
+Los endpoints de Model APIs (`/v4/models`, `/api/modelManager/v1/models` y variantes)
+dan **404** en esta instancia, asi que por API no se pueden auditar. Si se despliega
+alguno, hay que comprobarlo en la interfaz.
+
+Automatizado en el CLI:
+
+```bash
+python scripts/domino_job.py apagado    # salida 1 si hay algo vivo
+```
+
+## Calcular el coste real
+
+El listado de Jobs **no trae el hardware tier ni marcas de tiempo numericas**: solo
+`stageTimes` con cadenas ISO. El tier hay que sacarlo del endpoint legacy:
+
+```
+GET /v1/projects/{owner}/{project}/runs/{runId}
+```
+
+que devuelve `started`, `completed` (epoch en milisegundos) y `hardwareTierId`. El
+precio por minuto sale de `GET /v4/projects/{id}/hardwareTiers`, campo
+`hardwareTier.centsPerMinute`.
+
+Medicion real de la prueba completa de CausalImpact: **7 Jobs, 11,4 minutos de maquina,
+2,40 centimos** (~0,02 USD) en `n1-standard-4`. El analisis en si tarda unos 2 minutos;
+la instalacion de dependencias es la mitad de ese tiempo, y tambien se paga.
+
+## Las dos APIs de Jobs conviven
+
+Ambas responden en esta instancia (comprobado con un cuerpo incompleto a proposito):
+
+| | `/api/jobs/v1/jobs` | `/v4/jobs/start` |
+|---|---|---|
+| Comando | `runCommand` | `commandToRun` |
+| Tier | `hardwareTier` (nombre) | `hardwareTierId` (id) |
+| Rama | `mainRepoGitRef.refType` | `mainRepoGitRef.type` |
+
+Las dos se han usado con exito para lanzar el mismo analisis.
+
+
 ## Orden de trabajo que funciona
 
 1. Escribir y probar en local con Copilot.

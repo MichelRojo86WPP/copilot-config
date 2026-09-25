@@ -208,7 +208,27 @@ python scripts/domino_job.py run \
 si el Job termina en `Succeeded`.
 
 Comandos de apoyo: `whoami`, `projects`, `tiers`, `envs`, `jobs`, `status`, `logs`,
-`resolve`.
+`resolve`, `apagado`, `gasto`.
+
+### Al terminar: apagar (obligatorio)
+
+```bash
+python scripts/domino_job.py apagado
+```
+
+Recorre todos tus proyectos y avisa si queda algún Job corriendo o algún Workspace
+abierto. Devuelve código de salida 1 si encuentra algo, así que puedes encadenarlo
+detrás de cualquier ejecución.
+
+**Un Job se apaga solo al terminar el script. Un Workspace no: factura hasta que pulsas
+*Stop*.** Cerrar la pestaña del navegador no lo apaga. Es la causa número uno de gasto
+inesperado en Domino.
+
+Para ver lo que ha costado algo:
+
+```bash
+python scripts/domino_job.py gasto --project-id 665f...
+```
 
 ### El run definitivo para el cliente
 
@@ -248,7 +268,7 @@ Tres reglas:
 
 ---
 
-## Los tres errores que vas a cometer
+## Los errores que vas a cometer
 
 **1. Lanzar sin haber hecho push.** Domino ejecuta lo que hay en el repositorio remoto.
 Si no has subido los cambios, ejecutas código viejo y no te enteras: el Job funciona,
@@ -262,6 +282,46 @@ siquiera el que escribas dentro de un Workspace. Es intencional.
 **3. Asumir que el MCP puede elegir GPU.** No puede: `run_domino_job` no acepta
 hardware tier ni entorno ni commit. Usa el hardware por defecto del proyecto. Si tu MMM
 necesita GPU, o la pones como defecto del proyecto, o lanzas con el CLI.
+
+**4. Dar por hecho que los resultados se guardan.** La carpeta del repositorio dentro
+del Job (`/mnt/code`) desaparece al apagarse la máquina. Si tu script escribe en
+`outputs/`, cópialo a `/mnt/artifacts` antes de terminar o no lo verás en ningún sitio.
+Comprobado por las malas.
+
+**5. Subir tu `pip freeze` como `requirements.txt`.** Domino lo instala **solo y antes
+de ejecutar nada**. Un freeze hecho en Windows arrastra `pywinpty`, que no existe en
+Linux, y el Job muere en la preparación sin llegar a tu script.
+
+**6. Confiar en que "en mi portátil funciona".** Tu Python es 3.12 y el de Domino 3.11.
+Hay sintaxis válida en uno e inválida en el otro. Antes de lanzar, pide que se compile
+el repositorio con un Python 3.11 real.
+
+**7. Creer que fijar el commit hace el análisis reproducible.** No basta si el modelo
+hace muestreo. Sin fijar la semilla, dos ejecuciones idénticas dan números distintos.
+Nos pasó: +717 y +730 sesiones sobre el mismo commit y los mismos datos.
+
+**8. Dejarte un Workspace abierto.** Sigue facturando. Ejecuta `apagado` al terminar.
+
+---
+
+## Un caso real, de principio a fin
+
+El 25/09/2026 se ejecutó el análisis CausalImpact de Paradisus US 2026 desde
+`WPPOpen/advanced_analytics_melia` en Domino, y funcionó. Así quedó:
+
+| Paso | Qué se hizo |
+|---|---|
+| Proyecto | Git-based, conectado al repo, billing tag `Non_client_c9h` |
+| Entorno | `Custom Environment: py3.11 - r4.4` (el Standard va con 3.10) |
+| Arranque | `bash scripts/run_domino.sh <script.py> <config.json>` |
+| Dependencias | `requirements.txt` portable, instalado por Domino automáticamente |
+| Resultados | copiados a `/mnt/artifacts` por el script de arranque |
+| Recuperación | `browseFiles` para listar + `/v1/.../blobs/{key}` para descargar |
+| Coste | 11 minutos de máquina, ~0,02 USD en 7 Jobs |
+
+Resultado del análisis: **+706 sesiones diarias (+23,1 %)**, +36.028 acumuladas,
+p < 0,01. Dos ejecuciones distintas dieron exactamente lo mismo, una vez fijada la
+semilla.
 
 ---
 

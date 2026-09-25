@@ -9,10 +9,16 @@ esa rama o commit. Los logs se ven en streaming en tu terminal.
 Uso tipico:
   python domino_job.py whoami
   python domino_job.py projects
-  python domino_job.py tiers
+  python domino_job.py tiers --project-id 665f...
   python domino_job.py run --project-id 665f... --command "python run_analysis.py" --branch main --follow
   python domino_job.py logs 6712abc... --follow
   python domino_job.py status 6712abc...
+  python domino_job.py apagado                      <- OBLIGATORIO al terminar
+  python domino_job.py gasto --project-id 665f...
+
+REGLA INNEGOCIABLE: al acabar cualquier trabajo, ejecuta "apagado". Un Job se
+apaga solo cuando termina el script, pero un Workspace factura hasta que alguien
+pulsa Stop en la interfaz, y cerrar la pestana del navegador NO lo apaga.
 
 Configuracion (por orden de prioridad):
   1. Flags:      --host / --token
@@ -70,6 +76,9 @@ EP_JOBS = "/api/jobs/beta/jobs"
 EP_JOB_DETAIL = "/api/jobs/beta/jobs/{job_id}"
 EP_JOB_LOGS = "/api/jobs/beta/jobs/{job_id}/logs"
 EP_RESOLVE_GIT_REF = "/api/projects/beta/projects/{project_id}/commits/resolveGitRef"
+EP_PROJECTS_V4 = "/v4/projects"
+EP_WORKSPACES = "/v4/workspace"
+EP_RUN_DETALLE = "/v1/projects/{owner}/{project}/runs/{run_id}"
 
 # Estados terminales de un Job (campo status.executionStatus).
 ESTADOS_FINALES = {"Succeeded", "Failed", "Stopped", "Error"}
@@ -408,6 +417,106 @@ def cmd_resolve(args, host, token, api_key):
     print(json.dumps(datos, indent=2, ensure_ascii=False))
 
 
+def cmd_apagado(args, host, token, api_key):
+    """Verifica que no quede nada encendido consumiendo maquina en Domino.
+
+    Un Job se apaga solo al terminar, pero un Workspace sigue facturando hasta que
+    alguien lo para, y una App publicada factura de forma continua. Este comando
+    recorre todos tus proyectos y devuelve codigo de salida 1 si encuentra algo vivo,
+    para poder encadenarlo al final de un script de ejecucion.
+    """
+    u = peticion(host, EP_SELF, token, api_key)
+    uid = u.get("user", u).get("id")
+
+    proyectos = _items(peticion(host, EP_PROJECTS_V4, token, api_key,
+                                params={"ownerId": uid}), "projects")
+    if args.project_id:
+        proyectos = [p for p in proyectos if p.get("id") == args.project_id]
+
+    vivos = []
+    print(f"{'PROYECTO':42}  {'JOBS ACTIVOS':13}  WORKSPACES")
+    print("-" * 74)
+    for p in proyectos:
+        pid, nombre = p.get("id"), p.get("name")
+
+        jobs = _items(peticion(host, EP_JOBS, token, api_key,
+                               params={"projectId": pid}), "jobs")
+        activos = [j for j in jobs
+                   if not (j.get("status") or {}).get("isCompleted", True)]
+
+        espacios = _items(peticion(host, EP_WORKSPACES, token, api_key,
+                                   params={"projectId": pid}), "items")
+
+        for j in activos:
+            vivos.append((nombre, "Job", j.get("id"),
+                          (j.get("status") or {}).get("executionStatus", "?")))
+        for w in espacios:
+            estado = ((w.get("mostRecentSession") or {})
+                      .get("sessionStatusInfo", {})
+                      .get("rawExecutionDisplayStatus", "?"))
+            vivos.append((nombre, "Workspace", w.get("id"), estado))
+
+        marca = "  <-- REVISAR" if (activos or espacios) else ""
+        print(f"{str(nombre)[:42]:42}  {len(activos):^13}  {len(espacios)}{marca}")
+
+    print()
+    if not vivos:
+        print("OK: no hay nada encendido. No se esta generando gasto.")
+        return
+
+    print("ATENCION: hay recursos consumiendo maquina.\n")
+    for nombre, tipo, ident, estado in vivos:
+        print(f"  {tipo:10} {ident}  estado={estado}  (proyecto {nombre})")
+    print("\nUn Workspace factura hasta que se pulsa 'Stop' en la interfaz de Domino.")
+    print("Cerrar la pestana del navegador NO lo apaga.")
+    sys.exit(1)
+
+
+def cmd_gasto(args, host, token, api_key):
+    """Suma los minutos de maquina y el coste de los Jobs de un proyecto.
+
+    El listado de Jobs no trae el hardware tier ni marcas de tiempo numericas, asi
+    que el tier hay que sacarlo del endpoint legacy de runs, uno por Job.
+    """
+    proyectos = _items(peticion(host, EP_PROJECTS_V4, token, api_key), "projects")
+    proyecto = next((p for p in proyectos if p.get("id") == args.project_id), None)
+    if not proyecto:
+        error(f"No se encuentra el proyecto {args.project_id} entre los visibles.")
+    owner = (proyecto.get("ownerUsername")
+             or (proyecto.get("owner") or {}).get("userName"))
+
+    tarifa = {}
+    for t in _items(peticion(host, EP_TIERS_PROYECTO.format(project_id=args.project_id),
+                             token, api_key), "hardwareTiers"):
+        ht = t.get("hardwareTier", t)
+        tarifa[ht.get("id")] = float(ht.get("centsPerMinute") or 0)
+
+    jobs = _items(peticion(host, EP_JOBS, token, api_key,
+                           params={"projectId": args.project_id}), "jobs")
+
+    total_min = total_cent = 0.0
+    print(f"{'#':>4}  {'ESTADO':11}  {'TIER':22}  {'MINUTOS':>8}  {'CENTIMOS':>9}")
+    print("-" * 64)
+    for j in sorted(jobs, key=lambda x: x.get("number") or 0):
+        run = peticion(host, EP_RUN_DETALLE.format(owner=owner,
+                                                   project=proyecto.get("name"),
+                                                   run_id=j.get("id")),
+                       token, api_key)
+        inicio, fin = run.get("started"), run.get("completed")
+        tier_id = run.get("hardwareTierId") or "?"
+        minutos = (fin - inicio) / 60000 if isinstance(inicio, (int, float)) \
+            and isinstance(fin, (int, float)) else 0.0
+        centimos = minutos * tarifa.get(tier_id, 0.0)
+        total_min += minutos
+        total_cent += centimos
+        estado = (j.get("status") or {}).get("executionStatus", "?")
+        print(f"{j.get('number'):>4}  {estado:11}  {str(tier_id)[:22]:22}  "
+              f"{minutos:8.1f}  {centimos:9.2f}")
+    print("-" * 64)
+    print(f"{'TOTAL':>4}  {'':11}  {'':22}  {total_min:8.1f}  {total_cent:9.2f}")
+    print(f"\nAproximadamente {total_cent / 100:.2f} USD.")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -472,6 +581,13 @@ def construir_parser():
     p.add_argument("ref", help="Nombre de la rama o del tag")
     p.add_argument("--tag", action="store_true", help="Trata ref como tag en vez de rama")
 
+    p = sub.add_parser("apagado",
+                       help="OBLIGATORIO al terminar: verifica que no queda nada encendido")
+    p.add_argument("--project-id", help="Limita la revision a un proyecto")
+
+    p = sub.add_parser("gasto", help="Minutos de maquina y coste de los Jobs de un proyecto")
+    p.add_argument("--project-id", required=True)
+
     return parser
 
 
@@ -485,6 +601,8 @@ COMANDOS = {
     "logs": cmd_logs,
     "run": cmd_run,
     "resolve": cmd_resolve,
+    "apagado": cmd_apagado,
+    "gasto": cmd_gasto,
 }
 
 

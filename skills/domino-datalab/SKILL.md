@@ -8,15 +8,16 @@ description: >
   Personal Access Tokens y Service Accounts. Usar al ejecutar análisis (Meridian MMM, GeoX,
   CausalImpact) en Domino desde local, al conectar un asistente de código por MCP o SSH,
   al lanzar o depurar Jobs, al publicar un modelo como API, al montar el entorno de
-  cómputo, o al decidir dónde viven código, datos y resultados.
+  cómputo, o al decidir dónde viven código, datos y resultados. Incluye el control de
+  coste: verificar que no queden Workspaces ni Jobs encendidos al terminar.
 license: MIT
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   author: MichelRojo86WPP
   category: mlops
   domain: compute-platform
   tier: POWERFUL
-  updated: 2026-09-23
+  updated: 2026-09-25
   frameworks: domino-data-lab, python-domino, flyte, mlflow
 ---
 
@@ -32,11 +33,58 @@ Compute Environment, hardware tier, GPU, Dataset, snapshot, artifact, `/mnt/code
 Flyte, Launcher, Domino Endpoint, Model API, inferencia síncrona y asíncrona,
 batch scoring, `.modelignore`, MCP server, `domino_server`, vibe modeling,
 coding assistant, `dom connect`, Remote-SSH, extensión de VS Code,
-`domino_job.py`, `domino_mcp_setup.py`.
+`domino_job.py`, `domino_mcp_setup.py`, apagar máquinas, coste, `centsPerMinute`.
 
 > **Versión de referencia:** Domino Public API **6.4.0**, Domino Cloud / 6.3.
 > Todo el API de esta skill está verificado contra el OpenAPI oficial
 > (`https://docs.domino.ai/api-specs/cloud/public-api.json`). No inventes endpoints.
+
+## ⛔ Regla innegociable: no dejar máquinas encendidas
+
+**Al terminar cualquier trabajo en Domino hay que verificar que no queda nada
+consumiendo cómputo.** No es opcional ni se delega al usuario: forma parte de dar
+el trabajo por terminado.
+
+```bash
+python scripts/domino_job.py apagado      # recorre todos tus proyectos
+```
+
+Devuelve código de salida **1** si encuentra algo vivo, así que encadena en
+cualquier script. Comprueba Jobs sin terminar y Workspaces abiertos.
+
+| Recurso | ¿Se apaga solo? | Riesgo |
+|---|---|---|
+| **Job** | **Sí**, al acabar el comando | Bajo. Solo queda colgado si el script no termina |
+| **Workspace** | **No** | **Alto.** Factura hasta que alguien pulsa *Stop* |
+| **App publicada** | **No** | **Alto.** Factura de forma continua |
+| **Endpoint / Model API** | **No** | **Alto.** Réplicas siempre levantadas |
+
+> ⚠️ Cerrar la pestaña del navegador **no apaga un Workspace**. Hay que pulsar
+> *Stop* explícitamente. Es la causa número uno de gasto inesperado.
+
+Un Job que se queda en `Running` para siempre (bucle infinito, un `input()`, un
+servidor que no termina) sigue facturando igual que un Workspace. Si `apagado`
+detecta uno, hay que pararlo desde la interfaz.
+
+Para saber qué se ha gastado:
+
+```bash
+python scripts/domino_job.py gasto --project-id <id>
+```
+
+Cruza la duración real de cada Job con el precio por minuto de su tier. Ojo: el
+listado de Jobs **no trae el hardware tier**; hay que sacarlo de
+`/v1/projects/{owner}/{project}/runs/{runId}`.
+
+Buenas prácticas de coste, por orden de impacto:
+
+1. **Usa Jobs, no Workspaces**, para todo lo que no requiera iterar en vivo.
+2. **Ajusta `requirements.txt`**: el tiempo de instalación también se paga, y
+   ocurre en cada ejecución.
+3. **No pidas GPU si no la usas.** Un tier con T4 cuesta ~10 veces más que
+   `n1-standard-4`.
+4. **Sonda barata antes de trabajo caro**: un Job de un minuto que solo hace `ls`
+   y comprueba versiones ahorra decenas de minutos de espera y gasto.
 
 ## El modelo mental en una frase
 
@@ -169,7 +217,7 @@ El repositorio incluye `scripts/domino_job.py` (solo librería estándar):
 ```bash
 python scripts/domino_job.py whoami                       # verificar conexión
 python scripts/domino_job.py projects                     # obtener el projectId
-python scripts/domino_job.py tiers                        # ver tiers con GPU
+python scripts/domino_job.py tiers --project-id 665f...   # ver tiers y precio/min
 
 python scripts/domino_job.py run \
   --project-id 665f... \
@@ -177,11 +225,37 @@ python scripts/domino_job.py run \
   --branch feature/mmm-2026 \
   --tier "GPU T4" \
   --follow                                                # logs en streaming
+
+python scripts/domino_job.py apagado                      # OBLIGATORIO al terminar
+python scripts/domino_job.py gasto --project-id 665f...   # qué ha costado
 ```
 
 `--follow` devuelve código de salida 0 si el Job acaba en `Succeeded`, 1 en otro caso,
 por lo que encadena bien en CI. Para ejecuciones **reproducibles** usa `--commit <sha>`
 en vez de `--branch`.
+
+### Las dos APIs de Jobs no usan los mismos nombres
+
+Conviven dos rutas y **cada una tiene su esquema**. Mezclarlas es un clásico:
+
+| | Public API `/api/jobs/v1/jobs` | Legacy `/v4/jobs/start` |
+|---|---|---|
+| Comando | `runCommand` | `commandToRun` |
+| Tier | `hardwareTier` (nombre) | `hardwareTierId` (id) |
+| Rama | `mainRepoGitRef.refType` | `mainRepoGitRef.type` |
+
+Ambas responden en 6.2.2 (verificado). El CLI usa la Public API. Los valores del tipo
+de referencia son `head`, `branches`, `tags` y `commitId`: **`branches` en plural**. Con
+`branch` en singular el Job muere con `Unknown reference type`.
+
+> ⚠️ En la legacy, si mandas `hardwareTier` en vez de `hardwareTierId` la API **acepta
+> la petición sin protestar e ignora el valor**, y el Job corre en el tier por defecto.
+> Se detecta comparando con el `hardwareTierId` que devuelve
+> `GET /v1/projects/{owner}/{project}/runs/{runId}`.
+
+**Truco para sondear esquemas sin gastar máquina:** manda el cuerpo incompleto a
+propósito, omitiendo el comando. La validación de Play se queja de todos los campos a
+la vez, te dice si el resto del payload es válido, y no arranca nada.
 
 Equivalente en `curl`:
 
@@ -256,13 +330,33 @@ grandes, usa un **batch scoring Job**.
 
 ## Errores frecuentes
 
-Ver `references/pitfalls.md` para la lista completa. Los tres que más duelen:
+Ver `references/pitfalls.md` para la lista completa. Estos ocho están **verificados
+ejecutándolos**, no deducidos de la documentación:
 
-1. **Esperar que Domino commitee tu código.** No lo hace en proyectos Git-based. Haz push.
-2. **Meter los datos en el repo.** Rompe el límite de ficheros y ralentiza cada arranque.
-   Usa Datasets.
-3. **Escribir resultados en el directorio de trabajo** en vez de `/mnt/artifacts`: no se
-   sincronizan y se pierden al terminar el Job.
+1. **Dejar una máquina encendida.** Ver la regla innegociable del principio.
+2. **Esperar que Domino commitee tu código.** No lo hace en proyectos Git-based, ni
+   devuelve los resultados a GitHub. Haz push tú.
+3. **Escribir resultados en el directorio de trabajo.** `/mnt/code` es **efímero**: lo
+   que quede ahí se pierde al apagarse la máquina. Solo sobrevive `/mnt/artifacts`.
+   Si el script escribe en `outputs/`, cópialo al final:
+   `cp -r outputs/. "${DOMINO_ARTIFACTS_DIR:-/mnt/artifacts}"/`
+4. **Subir un `pip freeze` de Windows como `requirements.txt`.** Domino lo instala
+   **solo, antes de ejecutar nada**. Un freeze arrastra `pywinpty` y tumba el Job en la
+   fase de preparación, sin llegar al script.
+5. **Confiar en que tu Python local es el de Domino.** Las f-strings anidadas con
+   comillas del mismo tipo (`f"{d["k"]}"`) son legales desde 3.12 y `SyntaxError` en
+   3.11. `ast.parse(feature_version=(3,11))` **no las detecta**. La única validación
+   fiable es compilar con el intérprete real: `uv python install 3.11` y `py_compile`.
+6. **Crear un `.sh` en Windows.** Nace con CRLF y no arranca en Linux. Hacen falta
+   `.gitattributes` con `*.sh text eol=lf` **y** normalizar los bytes. Verifica con
+   `git ls-files --eol`; `git cat-file blob | Out-String` miente porque PowerShell
+   normaliza los finales de línea.
+7. **Creer que fijar el commit basta para reproducir.** Cualquier análisis con muestreo
+   (CausalImpact, MMM bayesiano) da cifras distintas en cada ejecución si no se fija la
+   semilla de `numpy` y `tensorflow`. Comprobado: dos Jobs del mismo commit dieron
+   +717 y +730, con p = 0,0011 y p = 0,0055.
+8. **Meter los datos en el repo.** Rompe el límite de ficheros y ralentiza cada
+   arranque. Usa Datasets.
 
 ## Referencias
 
