@@ -450,6 +450,39 @@ Medicion real de la prueba completa de CausalImpact: **7 Jobs, 11,4 minutos de m
 2,40 centimos** (~0,02 USD) en `n1-standard-4`. El analisis en si tarda unos 2 minutos;
 la instalacion de dependencias es la mitad de ese tiempo, y tambien se paga.
 
+### La API de costes de Domino es solo para administradores
+
+`GET /v4/cost/allocation` existe pero devuelve **403** a un usuario normal:
+*"You don't have the right permissions to view this page"*. Da igual el valor de
+`window` (`7d`, `30d`, `today`) o de `aggregation` (`project`, `billing_tag`): el
+permiso se comprueba antes que los parametros. Un `GET` sin `window` devuelve 400
+*"Missing parameter 'window' is required"*, lo que puede hacer creer que el endpoint
+esta disponible cuando no lo esta.
+
+Conclusion: sin rol de admin, el coste hay que calcularlo a mano con el metodo de
+arriba. No hay atajo.
+
+### El "TOTAL RUNTIME" del panel del proyecto no es fiable
+
+En el pilotaje el panel de `Overview` marcaba **"un mes"** con 8 Jobs que sumaban
+**12m 36s**. Contrastado contra dos fuentes independientes:
+
+| Fuente | Valor |
+|---|---|
+| Panel `Overview` del proyecto | "un mes" |
+| Columna `DURATION` de la pagina de Jobs | 12m 36s |
+| Calculo por API (`runs/{runId}`) | 11,4 min |
+
+La diferencia entre las dos ultimas es el arranque de la maquina, que la interfaz
+cuenta y el calculo por API no. El "un mes" no se corresponde con nada. Tratarlo como
+un fallo de formateo de la interfaz y usar la columna `DURATION` como dato bueno.
+
+### Los estados no se llaman igual en la API que en la interfaz
+
+La API devuelve `Succeeded`; la tabla de Jobs de la interfaz muestra **`Completed`**
+para ese mismo Job. `Failed` coincide en las dos. Conviene aceptar los dos nombres al
+filtrar.
+
 ## Las dos APIs de Jobs conviven
 
 Ambas responden en esta instancia (comprobado con un cuerpo incompleto a proposito):

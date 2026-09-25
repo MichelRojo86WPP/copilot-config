@@ -226,7 +226,11 @@ inesperado en Domino.
 
 ### Comprobarlo en la interfaz
 
-Dos páginas, verificadas en tu instancia. La primera es la que importa:
+Desde el menú de arriba: **`Develop` → `Workspaces`**. Esa página te enseña los
+Workspaces de *todos* tus proyectos a la vez, que es justo lo que necesitas. Si dice
+*"You have no Workspaces"*, no tienes nada encendido. Al lado está `Develop` → `Jobs`.
+
+Las direcciones directas, verificadas en tu instancia:
 
 | Página | Para qué |
 |---|---|
@@ -236,11 +240,22 @@ Dos páginas, verificadas en tu instancia. La primera es la que importa:
 Si solo quieres mirar un proyecto:
 `/workspaces/<usuario>/<proyecto>` y `/jobs/<usuario>/<proyecto>`.
 
-Qué buscar: cualquier fila cuyo estado **no** sea `Stopped`, `Succeeded`, `Failed` o
-`Error`. Un `Running` o `Starting` está consumiendo máquina ahora mismo.
+Dentro de un proyecto también vale con mirar el panel de la derecha, en `Overview`: si
+los contadores **WORKSPACES** y **APPS** están a **0**, ahí no hay nada gastando. El
+contador de **JOBS** puede ser alto sin problema: cuenta los que has lanzado en total,
+no los que están corriendo.
+
+Qué buscar: cualquier fila cuyo estado **no** sea `Stopped`, `Completed`, `Succeeded`,
+`Failed` o `Error`. Un `Running` o `Starting` está consumiendo máquina ahora mismo.
 
 Para apagar un Workspace hay que pulsar **Stop** en su fila. Cerrar la pestaña del
 navegador no lo apaga.
+
+> **No te fíes del "TOTAL RUNTIME" del panel del proyecto.** En el pilotaje marcaba
+> *"un mes"* cuando el gasto real eran 12 minutos. Lo comprobamos por dos vías: la
+> columna `DURATION` de la propia página de Jobs sumaba 12m 36s, y el cálculo por API
+> daba 11,4 minutos de máquina. Es un fallo de la interfaz, no gasto.
+> El dato bueno es la columna `DURATION` de `Develop` → `Jobs`.
 
 Para ver lo que ha costado algo:
 
