@@ -48,6 +48,13 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+# Los logs de Domino traen caracteres Unicode (cajas, flechas, emojis). La consola
+# de Windows usa cp1252 por defecto y aborta el seguimiento con UnicodeEncodeError
+# justo cuando el Job empieza a imprimir cosas interesantes.
+for _flujo in (sys.stdout, sys.stderr):
+    if hasattr(_flujo, "reconfigure"):
+        _flujo.reconfigure(encoding="utf-8", errors="replace")
+
 CONFIG_PATH = Path.home() / ".domino" / "config.json"
 
 # Endpoints reales del Domino Public API (no inventar otros).
