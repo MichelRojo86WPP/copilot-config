@@ -223,19 +223,14 @@ a posiciones enteras internamente y necesita el índice reseteado.`,
 // ---------------------------------------------------------------------------
 // Detección de intención
 // ---------------------------------------------------------------------------
-const CI_KEYWORDS = [
-    'causal', 'causalimpact', 'contrafactual', 'bayesian', 'bsts',
-    'intervención', 'intervencion', 'pre_period', 'post_period', 'pre period',
-    'fit_causalimpact', 'modeloptions', 'seasons', 'control', 'serie temporal',
-    'pausa', 'campaña', 'efecto', 'incremento', 'sesiones', 'ventas',
-    'marca', 'keyword', 'impacto', 'lift', 'significativo', 'p-value',
-    'paradisus', 'sem brand', 'tratada', 'sem-brand'
-];
+// Términos específicos con límite de palabra (evita falsos positivos como "autopausar")
+const CI_REGEX = /causal\s*-?impact|\bbsts\b|contrafactual|counterfactual|fit_causalimpact|\bpre_period\b|\bpost_period\b|modeloptions|efecto incremental|impacto causal|sem[\s-]brand/i;
 
 function isCIRelated(prompt) {
-    const lower = prompt.toLowerCase();
-    return CI_KEYWORDS.some(kw => lower.includes(kw));
+    return !!prompt && CI_REGEX.test(prompt);
 }
+
+let baseContextInjected = false;
 
 function detectTopic(prompt) {
     const lower = prompt.toLowerCase();
@@ -495,8 +490,8 @@ const session = await joinSession({
 
     hooks: {
         onSessionStart: async (input, invocation) => {
-            await session.log("🔬 CausalImpact Expert activado — TFP WPP/Melia", { ephemeral: true });
-            return { additionalContext: CI_SYSTEM_CONTEXT };
+            // Sin contexto base aquí: se inyecta solo en el primer prompt relevante
+            await session.log("🔬 CausalImpact Expert listo (bajo demanda)", { ephemeral: true });
         },
 
         onUserPromptSubmitted: async (input, invocation) => {
@@ -504,9 +499,11 @@ const session = await joinSession({
 
             const topic = detectTopic(input.prompt);
             const lesson = topic ? `\n\n### Aprendizaje relevante\n${LESSONS_LEARNED[topic] ?? ''}` : '';
+            const base = baseContextInjected ? '' : `${CI_SYSTEM_CONTEXT}\n\n`;
+            baseContextInjected = true;
 
             return {
-                additionalContext: `[CausalImpact Expert] El usuario pregunta sobre TFP CausalImpact.${lesson}
+                additionalContext: `${base}[CausalImpact Expert] El usuario pregunta sobre TFP CausalImpact.${lesson}
 Responde en español. Usa el API real de tfp-causalimpact.
 CRÍTICOS a recordar siempre:
 - Transformación log diferenciada por tipo de columna (monetarias/sesiones/promo)
