@@ -71,13 +71,10 @@ import tensorflow_probability as tfp
 `;
 
 // --- Palabras clave que indican preguntas sobre Meridian ---
-const MERIDIAN_KEYWORDS = [
-    "meridian", "mmm", "media mix", "budget optim", "roi", "adstock",
-    "saturation", "mcmc", "nuts sampler", "sample_posterior", "sample_prior",
-    "inputdata", "builder", "modelspec", "priordistr", "dataframe",
-    "media_channel", "spend", "impression", "geo", "kpi", "response curve",
-    "incremental", "attribution", "media model", "marketing mix"
-];
+// Términos específicos con límite de palabra (evita falsos positivos como "android" → roi)
+const MERIDIAN_REGEX = /\bmeridian\b|\bmmm\b|media[\s-]mix|marketing[\s-]mix|budgetoptimizer|budget optimi[sz]|\badstock\b|\bmcmc\b|nuts sampler|sample_posterior|sample_prior|\binputdata\b|modelspec|priordistribution|media_channel|response curves?|\bmroi\b/i;
+
+let baseContextInjected = false;
 
 // --- Contexto adicional según el tipo de consulta detectada ---
 const TOPIC_CONTEXTS = {
@@ -130,8 +127,7 @@ results.output_optimization_summary('output.html', filepath)
 
 // --- Detectar si el prompt es relevante para Meridian ---
 function isMeridianRelated(prompt) {
-    const lower = prompt.toLowerCase();
-    return MERIDIAN_KEYWORDS.some(kw => lower.includes(kw));
+    return !!prompt && MERIDIAN_REGEX.test(prompt);
 }
 
 // --- Detectar el subtema específico del prompt ---
@@ -552,12 +548,9 @@ if __name__ == "__main__":
     ],
 
     hooks: {
-        // Inyectar conocimiento Meridian al inicio de cada sesión
+        // Sin contexto base al inicio: se inyecta solo en el primer prompt relevante
         onSessionStart: async (input, invocation) => {
-            await session.log("🧪 Meridian Expert activado — MMM WPP/Melia", { ephemeral: true });
-            return {
-                additionalContext: MERIDIAN_SYSTEM_CONTEXT,
-            };
+            await session.log("🧪 Meridian Expert listo (bajo demanda)", { ephemeral: true });
         },
 
         // Enriquecer prompts que mencionen Meridian con contexto específico
@@ -566,9 +559,11 @@ if __name__ == "__main__":
 
             const topic = detectTopic(input.prompt);
             const extra = topic ? TOPIC_CONTEXTS[topic] : "";
+            const base = baseContextInjected ? "" : `${MERIDIAN_SYSTEM_CONTEXT}\n\n`;
+            baseContextInjected = true;
 
             return {
-                additionalContext: `[Meridian Expert] El usuario está preguntando sobre Meridian MMM.${extra}
+                additionalContext: `${base}[Meridian Expert] El usuario está preguntando sobre Meridian MMM.${extra}
 Responde en español. Usa el API real de Meridian (no pseudocódigo).
 Cuando generes código Python, sigue las convenciones del repositorio:
 autocomentado en español, docstrings, comentarios de bloque por fase.`,

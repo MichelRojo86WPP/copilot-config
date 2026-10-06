@@ -151,8 +151,10 @@ Tema detectado: TROUBLESHOOTING. Recuerda:
 function isGeoXRelated(prompt) {
     if (!prompt) return false;
     const lower = prompt.toLowerCase();
-    return /geox|geo.?experiment|geo.?test|geo.?lift|holdback|go.?dark|heavy.?up|go.?dim|incrementalidad|incremental(ity)?|treatment geo|control geo|\bmde\b|minimum detectable|run_design|designconfig|analysisconfig|time.?based regression|\btbr\b|placebo|icpd|iroas|cpic/.test(lower);
+    return /geox|geo[\s_-]?experiment|geo[\s_-]?test|geo[\s_-]?lift|\bholdback\b|\bgo[\s_-]?dark\b|\bheavy[\s_-]?up\b|\bgo[\s_-]?dim\b|treatment geo|control geo|\bmde\b|minimum detectable|run_design|designconfig|analysisconfig|time[\s_-]?based regression|\btbr\b|\bicpd\b|\biroas\b|\bcpic\b/.test(lower);
 }
+
+let baseContextInjected = false;
 
 /** Clasifica el prompt en uno de los temas con contexto adicional. */
 function detectTopic(prompt) {
@@ -1109,12 +1111,9 @@ ${tipo !== "HOLDBACK" ? `- \`spend\` es **obligatorio** en los datos por ser un 
     ],
 
     hooks: {
-        // Inyectar el conocimiento GeoX al inicio de cada sesión
+        // Sin contexto base al inicio: se inyecta solo en el primer prompt relevante
         onSessionStart: async (input, invocation) => {
-            await session.log("🌍 GeoX Expert activado — geo-experimentos WPP/Melia", { ephemeral: true });
-            return {
-                additionalContext: GEOX_SYSTEM_CONTEXT,
-            };
+            await session.log("🌍 GeoX Expert listo (bajo demanda)", { ephemeral: true });
         },
 
         // Enriquecer prompts relacionados con geo-experimentos
@@ -1123,9 +1122,11 @@ ${tipo !== "HOLDBACK" ? `- \`spend\` es **obligatorio** en los datos por ser un 
 
             const topic = detectTopic(input.prompt);
             const extra = topic ? TOPIC_CONTEXTS[topic] : "";
+            const base = baseContextInjected ? "" : `${GEOX_SYSTEM_CONTEXT}\n\n`;
+            baseContextInjected = true;
 
             return {
-                additionalContext: `[GeoX Expert] El usuario está preguntando sobre geo-experimentos con Meridian GeoX.${extra}
+                additionalContext: `${base}[GeoX Expert] El usuario está preguntando sobre geo-experimentos con Meridian GeoX.${extra}
 
 Responde en español. Usa el API real de meridian_geox (no pseudocódigo) y verifica
 contra skills/meridian-geox/references/api-reference.md antes de escribir código.
